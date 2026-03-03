@@ -16,7 +16,13 @@ export default function ComingSoonPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (email.trim()) setSubmitted(true);
+    if (!email.trim()) return;
+    setSubmitted(true);
+    fetch("/api/waitlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    }).catch(() => {}); // fire and forget — UI already shows success
   }
 
   return (

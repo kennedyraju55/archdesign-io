@@ -63,29 +63,21 @@ export default function Hero() {
             Built by a Microsoft engineer · Free forever · 30 architectures
           </p>
 
-          {/* Social proof */}
+          {/* Real facts only */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-[var(--text-muted)]">
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {["🧑‍💻", "👩‍🎓", "🧑‍🎓", "👨‍💻", "👩‍💻"].map((e, i) => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-[var(--bg-card)] border border-[var(--border)] flex items-center justify-center text-sm">
-                    {e}
-                  </div>
-                ))}
-              </div>
-              <span><strong className="text-[var(--text-primary)]">2,400+</strong> students enrolled</span>
+            <div className="flex items-center gap-1.5">
+              <BookOpen className="w-4 h-4 text-blue-400" />
+              <span><strong className="text-[var(--text-primary)]">30</strong> architecture deep-dives</span>
             </div>
             <div className="hidden sm:block w-px h-4 bg-[var(--border)]" />
-            <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              ))}
-              <span className="ml-1"><strong className="text-[var(--text-primary)]">4.9/5</strong> average rating</span>
+            <div className="flex items-center gap-1.5">
+              <Star className="w-4 h-4 text-yellow-400" />
+              <span><strong className="text-[var(--text-primary)]">10</strong> LLM &amp; AI systems</span>
             </div>
             <div className="hidden sm:block w-px h-4 bg-[var(--border)]" />
             <div className="flex items-center gap-1.5">
               <Users className="w-4 h-4 text-green-400" />
-              <span><strong className="text-green-400">Weekly drip</strong> — 2 new videos every Monday</span>
+              <span><strong className="text-green-400">150+</strong> FAANG interview questions</span>
             </div>
           </div>
         </div>

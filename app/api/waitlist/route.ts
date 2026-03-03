@@ -1,44 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { neon } from "@neondatabase/serverless";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, plan } = await request.json();
+    const { email } = await request.json();
 
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
-      return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
+    if (!email || typeof email !== "string" || !email.includes("@")) {
+      return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+    const sql = neon(process.env.DATABASE_URL!);
 
-    if (supabaseUrl && supabaseKey) {
-      // Save to Supabase waitlist table
-      const res = await fetch(`${supabaseUrl}/rest/v1/waitlist`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-          Prefer: 'return=minimal',
-        },
-        body: JSON.stringify({
-          email: email.toLowerCase().trim(),
-          plan: plan ?? 'monthly',
-          signed_up_at: new Date().toISOString(),
-        }),
-      });
-      // 409 = duplicate email (unique constraint) — still a success
-      if (!res.ok && res.status !== 409) {
-        console.error('[waitlist] Supabase error:', res.status, await res.text());
-      }
-    } else {
-      // No DB yet — log the signup so it shows in Vercel logs
-      console.log(`[waitlist] NEW SIGNUP: ${email.toLowerCase().trim()} | plan=${plan}`);
-    }
+    // Create table if it doesn't exist yet
+    await sql`
+      CREATE TABLE IF NOT EXISTS waitlist (
+        id SERIAL PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `;
+
+    // Insert — ignore duplicates silently
+    await sql`
+      INSERT INTO waitlist (email) VALUES (${email.toLowerCase().trim()})
+      ON CONFLICT (email) DO NOTHING
+    `;
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('[waitlist] error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("[waitlist] error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
