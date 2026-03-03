@@ -165,12 +165,12 @@ export default function ArchitecturesPage() {
             20–40 minute deep-dives with live diagram annotation, FAANG interview Q&amp;A, and capacity estimation. New video every week.
           </p>
           <a
-            href="/subscribe"
+            href="/coming-soon"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-blue-600/30"
           >
-            Unlock All Videos — $5/mo
+            🔔 Videos Coming Soon
           </a>
-          <p className="mt-3 text-xs text-[var(--text-muted)]">Cancel anytime · No DRM · Watch at your own pace</p>
+          <p className="mt-3 text-xs text-[var(--text-muted)]">Free forever · Get notified when videos launch</p>
         </div>
       </section>
     </div>

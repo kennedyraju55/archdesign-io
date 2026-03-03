@@ -10,44 +10,44 @@ interface FAQItem {
 
 const faqs: FAQItem[] = [
   {
+    question: "What is system design and why does it matter?",
+    answer:
+      "System design is the process of defining the architecture, components, and interfaces of a system to satisfy specified requirements. It matters because every FAANG-level interview loop includes a system design round — and it's the round where candidates fail most often. Understanding how real systems work (not just toy examples) is what separates engineers who pass from those who don't.",
+  },
+  {
+    question: "Who is ArchDesign.io for?",
+    answer:
+      "ArchDesign.io is built for CS students, bootcamp graduates, and early-career engineers preparing for senior-level technical interviews. The content assumes CS fundamentals — data structures, basic networking, what a database is — but no distributed systems experience is required. The articles build intuition from first principles before going deep on production tradeoffs.",
+  },
+  {
+    question: "What architectures are covered?",
+    answer:
+      "30 architecture deep-dives across three categories: Distributed Systems (Netflix CDN, Twitter Fan-out, Uber geospatial, WhatsApp messaging, Google Search, etc.), Data & Infrastructure (DynamoDB, Cassandra, Kafka, Spark, Airflow, etc.), and LLM & AI Systems (GPT inference, RAG pipelines, vLLM, multi-agent systems, vector databases, KV cache disaggregation, and more). All 30 articles are free with no login required.",
+  },
+  {
     question: "How is this different from ByteByteGo?",
     answer:
-      "ByteByteGo charges $15/month for content that largely mirrors their books — solid fundamentals but outdated (no 2024–2025 research) and no FAANG interview Q&A. ArchDesign.io costs $5/month, covers 10 LLM architectures competitors have never touched (vLLM, RAG pipelines, multi-agent systems), grounds every breakdown in the latest papers (PRESERVE, Mooncake, Preble, Oaken, PyramidInfer), and attaches real FAANG interview questions to every architecture. It's written by a practicing Microsoft Software Engineer with an MS in CS — not a content creator recycling textbook diagrams.",
+      "ByteByteGo covers solid fundamentals but the content is largely based on their books — outdated (no 2024–2025 research) and no FAANG interview Q&A. ArchDesign.io covers 10 LLM architectures competitors have never touched (vLLM, RAG pipelines, multi-agent systems), grounds every breakdown in the latest papers (PRESERVE, Mooncake, Preble, Oaken, PyramidInfer), and attaches real FAANG interview questions to every architecture. It's written by a practicing Microsoft Software Engineer — not a content creator recycling textbook diagrams. And everything is free.",
+  },
+  {
+    question: "Is all the content really free?",
+    answer:
+      "Yes. All 30 architecture articles on ArchDesign.io are free, permanently, with no login required. This is a deliberate choice — foundational system design knowledge should be accessible to every CS student regardless of budget. Video walkthroughs are coming soon and will also be free.",
+  },
+  {
+    question: "Do you cover LLM and AI system architectures?",
+    answer:
+      "Yes — 10 dedicated deep-dives and counting. Covered architectures include: vLLM and PagedAttention, Retrieval-Augmented Generation (RAG) pipelines, multi-agent orchestration systems (LangGraph, AutoGen patterns), KV cache disaggregation (Mooncake), speculative decoding, tensor parallelism and model sharding, vector database internals (Pinecone, Weaviate), embedding pipelines at scale, fine-tuning infrastructure (LoRA, PEFT), and LLM serving schedulers (Preble). No other system design resource covers this territory at this depth.",
+  },
+  {
+    question: "Is the content up to date?",
+    answer:
+      "Yes — this is one of our core differentiators. We publish breakdowns of research papers within weeks of release. Current coverage includes PRESERVE (KV cache with semantic similarity), Mooncake (disaggregated prefill/decode), Preble (global LLM scheduler), Oaken (KV cache quantization), and PyramidInfer (layer-wise KV cache compression) — all 2024–2025 papers that ByteByteGo and DesignGurus haven't covered.",
   },
   {
     question: "Do I need to be an advanced CS student?",
     answer:
       "No. The content assumes you know CS fundamentals — data structures, basic networking, what a database is — which means any intermediate CS student, bootcamp grad preparing for senior roles, or early-career engineer is well-positioned. You don't need distributed systems experience. The articles build intuition from first principles before going deep on production tradeoffs, so you're never lost.",
-  },
-  {
-    question: "What happens when I subscribe?",
-    answer:
-      "You'll be redirected to a secure Stripe checkout — the industry standard for payments. After subscribing, you receive a welcome email with a curated reading path (which architectures to study first), links to the full article archive, and a YouTube playlist of companion deep-dive videos. Each Tuesday you get a new architecture breakdown directly in your inbox. You can also access everything in the subscriber portal immediately.",
-  },
-  {
-    question: "Can I cancel anytime?",
-    answer:
-      "Yes, absolutely. You can cancel instantly through the Stripe billing portal — no emails to send, no customer support needed. Your subscription simply won't renew next month. Importantly, all the articles you've read stay accessible forever. Free articles (all 30) never disappear. There's no lock-in, no cancellation fee, and no dark patterns.",
-  },
-  {
-    question: "Are the articles really free forever?",
-    answer:
-      "Yes. All 30 architecture articles on ArchDesign.io are free, permanently, with no login required. This is a deliberate choice — we believe foundational system design knowledge should be accessible to every CS student regardless of budget. The $5/month subscription unlocks the weekly deep-dives, the FAANG interview Q&A bank, the video breakdowns, and the curated reading paths. But the articles? Always free.",
-  },
-  {
-    question: "How technical are the videos?",
-    answer:
-      "Each video runs 20–40 minutes and assumes you've read the companion article first. They go deeper than the text: live whiteboarding of distributed system flows, paper walkthroughs, and common interview failure modes. We don't hand-hold through what a hash function is. We assume CS fundamentals and focus on the engineering judgment calls — why Cassandra over DynamoDB, why prefix caching matters for RAG, where vLLM's PagedAttention breaks under contention.",
-  },
-  {
-    question: "Is the content up to date?",
-    answer:
-      "Yes — this is one of our core differentiators. We publish breakdowns of research papers within weeks of release. Current coverage includes PRESERVE (KV cache with semantic similarity), Mooncake (disaggregated prefill/decode), Preble (global LLM scheduler), Oaken (KV cache quantization), and PyramidInfer (layer-wise KV cache compression) — all 2024–2025 papers that ByteByteGo and DesignGurus haven't covered. The landscape moves fast; so do we.",
-  },
-  {
-    question: "Do you cover LLM and AI system architectures?",
-    answer:
-      "Yes — 10 dedicated deep-dives and counting. Covered architectures include: vLLM and PagedAttention, Retrieval-Augmented Generation (RAG) pipelines, multi-agent orchestration systems (LangGraph, AutoGen patterns), KV cache disaggregation (Mooncake), speculative decoding, tensor parallelism and model sharding, vector database internals (Pinecone, Weaviate), embedding pipelines at scale, fine-tuning infrastructure (LoRA, PEFT), and LLM serving schedulers (Preble). No other system design newsletter covers this territory at this depth.",
   },
 ];
 
@@ -74,8 +74,7 @@ export default function FAQ() {
             className="text-lg"
             style={{ color: "var(--text-secondary)" }}
           >
-            Everything you need to know before subscribing — or just reading for
-            free.
+            Everything you need to know about ArchDesign.io — or just start reading for free.
           </p>
         </div>
 

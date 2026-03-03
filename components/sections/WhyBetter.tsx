@@ -120,7 +120,7 @@ export default function WhyBetter() {
             style={{ color: "var(--text-secondary)" }}
           >
             We built what we wished existed when preparing for FAANG system
-            design rounds — rigorous, current, and 3× cheaper.
+            design rounds — rigorous, current, and completely free.
           </p>
         </div>
 

@@ -1,12 +1,12 @@
 'use client';
 
 import Link from "next/link";
-import { ArrowRight, BookOpen, CheckCircle2, ShieldCheck } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2 } from "lucide-react";
 
 const trustSignals = [
-  { icon: ShieldCheck, label: "Secure Stripe payment" },
-  { icon: CheckCircle2, label: "Cancel anytime" },
-  { icon: BookOpen, label: "Free articles always stay free" },
+  { icon: CheckCircle2, label: "Free forever" },
+  { icon: CheckCircle2, label: "No login required" },
+  { icon: BookOpen, label: "30 architecture deep-dives" },
 ];
 
 export default function FinalCTA() {
@@ -42,7 +42,7 @@ export default function FinalCTA() {
       <div className="relative z-10 max-w-3xl mx-auto text-center">
         {/* Badge */}
         <span className="badge badge-purple mb-6 inline-block">
-          Join 2,400+ engineers
+          Free · No login required
         </span>
 
         {/* Headline */}
@@ -56,30 +56,22 @@ export default function FinalCTA() {
           className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
           style={{ color: "var(--text-secondary)" }}
         >
-          For just{" "}
-          <span
-            className="font-semibold"
-            style={{ color: "var(--accent-green)" }}
-          >
-            $5/month
-          </span>{" "}
-          — less than a coffee — get weekly deep-dives on{" "}
-          <span style={{ color: "var(--text-primary)" }}>30 architectures</span>
-          , FAANG interview Q&A, and 2025 research paper breakdowns your
-          competitors haven&apos;t read. Cancel anytime.
+          30 real-world architecture deep-dives — from Netflix CDN to GPT inference pipelines.{" "}
+          <span style={{ color: "var(--text-primary)" }}>FAANG interview Q&amp;A</span>,{" "}
+          2025 research paper breakdowns, and production tradeoffs. All free, forever.
         </p>
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
           <Link
-            href="/subscribe"
+            href="/architectures"
             className="group inline-flex items-center gap-2.5 px-8 py-4 rounded-xl font-semibold text-white text-base transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-900/40"
             style={{
               background:
                 "linear-gradient(135deg, var(--accent-blue), var(--accent-purple))",
             }}
           >
-            Subscribe — $5/month
+            Explore Architectures
             <ArrowRight
               size={18}
               className="transition-transform group-hover:translate-x-1"
@@ -87,7 +79,7 @@ export default function FinalCTA() {
           </Link>
 
           <Link
-            href="/articles"
+            href="/coming-soon"
             className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl font-semibold text-base border-2 transition-all hover:scale-105"
             style={{
               borderColor: "var(--accent-teal)",
@@ -103,8 +95,7 @@ export default function FinalCTA() {
                 "transparent";
             }}
           >
-            <BookOpen size={18} />
-            Browse Free Articles
+            🔔 Get Notified — Videos Coming Soon
           </Link>
         </div>
 
@@ -124,7 +115,7 @@ export default function FinalCTA() {
 
         {/* Fine print */}
         <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-          No credit card required for free articles · Stripe-secured checkout
+          Built by a Microsoft engineer · Free system design education for every CS student
         </p>
       </div>
     </section>

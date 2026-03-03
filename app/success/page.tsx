@@ -13,13 +13,13 @@ const nextSteps = [
   },
   {
     step: 3,
-    title: 'New videos every week — forever',
-    desc: 'We publish 2 new architectures every single week. At $5/mo that\'s less than a coffee for world-class content.',
+    title: 'Videos coming soon — stay tuned',
+    desc: 'We\'re recording free 40-minute video walkthroughs for every architecture. We\'ll notify you when they go live.',
   },
 ];
 
 const twitterText = encodeURIComponent(
-  'Just subscribed to @archdesign_io — 2 system design architecture videos every Monday for $5/mo. Built by a Microsoft engineer. Check it out 👇\nhttps://archdesign.io/subscribe'
+  'Just discovered @archdesign_io — free system design architecture deep-dives. Built by a Microsoft engineer. Check it out\nhttps://archdesign.io'
 );
 const linkedinUrl = 'https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Farchdesign.io%2Fsubscribe';
 
@@ -48,7 +48,7 @@ export default function SuccessPage() {
         You&apos;re In! 🎉
       </h1>
       <p className="text-lg text-center max-w-md mb-12" style={{ color: 'var(--text-secondary)' }}>
-        Welcome to <strong style={{ color: 'var(--text-primary)' }}>ArchDesign.io</strong> — your first video arrives this Monday.
+        Welcome to <strong style={{ color: 'var(--text-primary)' }}>ArchDesign.io</strong> — you&apos;re on the list! We&apos;ll notify you when videos go live.
       </p>
 
       {/* ── Next Steps ── */}

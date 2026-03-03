@@ -56,13 +56,12 @@ export default function Footer() {
 
           {/* Subscription */}
           <div>
-            <h4 className="font-semibold text-[var(--text-primary)] mb-4 text-sm uppercase tracking-wider">Subscription</h4>
+            <h4 className="font-semibold text-[var(--text-primary)] mb-4 text-sm uppercase tracking-wider">Videos</h4>
             <ul className="space-y-2">
               {[
-                { label: "Subscribe — $5/mo", href: "/subscribe" },
+                { label: "Videos Coming Soon", href: "/coming-soon" },
                 { label: "How It Works", href: "/#how-it-works" },
                 { label: "FAQ", href: "/#faq" },
-                { label: "Unsubscribe", href: "/unsubscribe" },
               ].map(({ label, href }) => (
                 <li key={label}>
                   <Link href={href} className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
