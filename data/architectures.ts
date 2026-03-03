@@ -31,7 +31,7 @@ export interface Architecture {
   solution: string;
   deepDive: DeepDiveSection[];
   tradeoffs: { pros: string[]; cons: string[] };
-  interviewQuestions: string[];
+  interviewQuestions: (string | { question: string; hint?: string })[];
   scalingNumbers: { label: string; value: string }[];
   mermaidDef?: string;
   howItWorks?: string;
@@ -1342,25 +1342,7 @@ export const architectures: Architecture[] = [
       { title: "FlashAttention: Fast and Memory-Efficient Exact Attention", authors: "Dao, T. et al.", year: 2022, url: "https://arxiv.org/abs/2205.14135" },
     ],
     diagramType: "llm-inference",
-
-    id: 21,
-    slug: "gpt-inference-architecture",
-    title: "GPT / Transformer Inference Architecture",
-    subtitle: "KV cache, FlashAttention, quantization, and batching at scale",
-    category: "LLM & AI Systems",
-    difficulty: "Expert",
-    companies: ["OpenAI", "Anthropic", "Google DeepMind"],
-    description:
-      "Serving a large language model efficiently requires solving multiple engineering challenges simultaneously: KV cache (avoid recomputing attention over the prompt on every token), FlashAttention (IO-aware attention reducing memory bandwidth bottleneck 3├ù), quantization (INT8/INT4 weights for 2-4├ù memory reduction), continuous batching (serving multiple requests with different sequence lengths in one forward pass), and tensor parallelism across multiple GPUs.",
-    keyInsight:
-      "LLM inference is memory-bandwidth bound, not compute-bound ΓÇö moving weights from GPU HBM to registers is the bottleneck, not the matrix multiplications.",
-    concepts: ["KV Cache", "FlashAttention", "Quantization (INT8/INT4)", "Continuous Batching", "Tensor Parallelism", "Speculative Decoding"],
-    papers: [
-      { title: "Attention Is All You Need", authors: "Vaswani, A. et al.", year: 2017, url: "https://arxiv.org/abs/1706.03762" },
-      { title: "FlashAttention: Fast and Memory-Efficient Exact Attention", authors: "Dao, T. et al.", year: 2022, url: "https://arxiv.org/abs/2205.14135" },
-    ],
-    diagramType: "llm-inference",
-    mermaidDef: `graph LR
+    mermaidDef:`graph LR
   subgraph Client
     REQ[Prompt Request]
   end
@@ -1835,6 +1817,7 @@ problem: "A transformer model with 70B parameters has weights totaling ~140GB in
     videoWeek: 14,
 
   
+    problem: "Naive LLM serving pre-allocates KV cache memory for the maximum sequence length per request. A 2048-token limit wastes 95% of KV cache memory for short outputs. When serving thousands of concurrent requests, this fragmentation limits a GPU to 10-20 simultaneous requests despite having capacity for 100+. Shared system prompts (1,000-5,000 tokens) are redundantly recomputed for every request, wasting prefill GPU cycles.",
     solution: "PagedAttention from vLLM manages the KV cache using a virtual memory paging metaphor: cache is divided into fixed-size blocks (pages) that are allocated on demand and freed when a request completes. Blocks are mapped to physical GPU memory via a block table — just like OS virtual memory. This eliminates internal and external fragmentation, enabling the GPU to run 2-4x more concurrent requests with the same memory.",
     deepDive: [
       { heading: "The KV Cache Memory Problem", body: "Without PagedAttention, each request pre-allocates a KV cache sized to the maximum sequence length at request start. A request limited to 2048 tokens allocates memory for 2048 tokens even if it only uses 100 — 95% waste. When many requests are in flight simultaneously, this fragmentation means the GPU can serve only 10-20 concurrent requests despite having enough memory for 100. The result: poor GPU utilization and high queuing latency." },
