@@ -1019,6 +1019,39 @@ export const architectures: Architecture[] = [
     papers: [],
     diagramType: "cluster",
     videoWeek: 8,
+
+    mermaidDef: `graph TD
+    Client[Client Application] --> SmartRouter[Smart Client\nSlot Table Cache]
+    SmartRouter -->|CRC16 key mod 16384| SlotCalc[Hash Slot Resolver]
+    subgraph "Master Node 1"
+        M1[Master 1\nSlots 0-5460]
+        R1A[Replica 1A]
+        M1 -->|Async Replication| R1A
+    end
+    subgraph "Master Node 2"
+        M2[Master 2\nSlots 5461-10922]
+        R2A[Replica 2A]
+        M2 -->|Async Replication| R2A
+    end
+    subgraph "Master Node 3"
+        M3[Master 3\nSlots 10923-16383]
+        R3A[Replica 3A]
+        M3 -->|Async Replication| R3A
+    end
+    SlotCalc --> M1
+    SlotCalc --> M2
+    SlotCalc --> M3
+    M1 <-->|Gossip PING/PONG| M2
+    M2 <-->|Gossip PING/PONG| M3
+    M3 <-->|Gossip PING/PONG| M1
+    M1 --> RDB[RDB Snapshot]
+    M1 --> AOF[AOF Log]
+    R1A -->|RAFT Election on Failure| FailoverPromotion[New Master]
+    style Client fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style M1 fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style M2 fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style M3 fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① Client sends SET/GET command to smart client library → ② Smart client computes CRC16(key) mod 16384 to determine target hash slot → ③ Cached slot table maps slot to the correct master node → ④ If routed to wrong node (stale table), master replies with MOVED redirect containing correct node address → ⑤ Master writes to in-memory data structure and asynchronously streams to replica via replication backlog → ⑥ Gossip protocol exchanges PING/PONG heartbeats every second, propagating slot ownership and node health across cluster → ⑦ If a master stops responding, peers mark it PFAIL; majority agreement escalates to FAIL → ⑧ Replica with latest replication offset increments config epoch and requests votes from all masters (RAFT-like election) → ⑨ Winning replica promotes itself to master, claims the failed node's hash slots, and broadcasts new configuration → ⑩ Persistence layer: RDB snapshots fork the process for point-in-time backup; AOF logs every write command for crash recovery`,
     problem: "A single Redis instance is limited by the memory of one machine (typically 64–256GB) and the throughput of one CPU core (Redis is single-threaded for data operations). As datasets grow beyond a single machine's memory and throughput requirements exceed 100K+ operations per second, you need horizontal scaling. Traditional approaches use external coordinators like ZooKeeper, but these introduce a single point of failure and operational complexity that contradicts Redis's philosophy of simplicity.",
     solution: "Redis Cluster partitions the keyspace into 16,384 hash slots distributed across master nodes using CRC16 hashing. There is no central coordinator — nodes maintain cluster state via a gossip protocol, exchanging heartbeats and slot ownership maps. Each master can have one or more replicas for high availability. When a master fails, its replicas automatically trigger a RAFT-like election to promote a new master. Clients cache the slot-to-node mapping and redirect automatically via MOVED/ASK responses.",
     scalingNumbers: [
@@ -1064,6 +1097,43 @@ export const architectures: Architecture[] = [
     ],
     diagramType: "kafka",
     videoWeek: 9,
+
+    mermaidDef: `graph LR
+    Producer[Producer App] --> Partitioner[Partitioner\nmurmur2 hash]
+    subgraph "Kafka Broker Cluster"
+        subgraph "Topic: orders (3 partitions)"
+            P0L[Partition 0\nLeader Broker 1]
+            P1L[Partition 1\nLeader Broker 2]
+            P2L[Partition 2\nLeader Broker 3]
+        end
+        subgraph "Replication"
+            P0F[Partition 0\nFollower Broker 2]
+            P1F[Partition 1\nFollower Broker 3]
+            P2F[Partition 2\nFollower Broker 1]
+        end
+        P0L -->|ISR Pull| P0F
+        P1L -->|ISR Pull| P1F
+        P2L -->|ISR Pull| P2F
+    end
+    Partitioner --> P0L
+    Partitioner --> P1L
+    Partitioner --> P2L
+    subgraph "Consumer Group A"
+        C1[Consumer 1\nP0 + P1]
+        C2[Consumer 2\nP2]
+    end
+    P0L --> C1
+    P1L --> C1
+    P2L --> C2
+    C1 -->|Commit Offset| OffsetTopic[__consumer_offsets]
+    C2 -->|Commit Offset| OffsetTopic
+    KRaft[KRaft Controller\nMetadata Quorum] -->|Manages| P0L
+    style Producer fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style P0L fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style P1L fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style P2L fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style KRaft fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① Producer sends event record with a message key to the Kafka client → ② Partitioner applies murmur2 hash of the key modulo partition count to select the target partition → ③ Record is sent to the leader broker for that partition, which appends it to the commit log (immutable, append-only segment files on disk) → ④ Follower replicas in the ISR (In-Sync Replica set) pull the record from the leader and write to their own logs → ⑤ Leader waits for min.insync.replicas acknowledgments before confirming the write to the producer (acks=all) → ⑥ Consumer group coordinator assigns partitions to consumers via a rebalance protocol (range or cooperative-sticky assignor) → ⑦ Each consumer reads sequentially from assigned partitions, tracking position via offsets → ⑧ Consumer commits offsets to the internal __consumer_offsets topic, enabling exactly-once semantics with transactional APIs → ⑨ KRaft controller quorum (replacing ZooKeeper) manages broker metadata, partition leadership elections, and cluster configuration`,
   
     problem: "LinkedIn, Uber, and hundreds of companies need to process millions of events per second — user clicks, GPS pings, transactions — with zero data loss. Traditional message queues (RabbitMQ, SQS) delete messages after consumption, making replay, audit, and stream processing impossible.",
     solution: "Kafka models the message queue as an immutable, distributed append-only log. Events are retained for configurable periods (days, weeks, forever), enabling consumers to replay history, multiple independent consumer groups to process the same stream, and stream processing frameworks (Flink, Spark) to compute aggregations in real-time.",
@@ -1108,6 +1178,36 @@ export const architectures: Architecture[] = [
     papers: [],
     diagramType: "k8s",
     videoWeek: 9,
+
+    mermaidDef: `graph TD
+    User[kubectl / API Client] --> APIServer[API Server\nREST + Admission Control]
+    subgraph "Control Plane"
+        APIServer --> ETCD[etcd\nDistributed State Store]
+        APIServer --> Scheduler[kube-scheduler\nBin-packing Algorithm]
+        APIServer --> CM[Controller Manager\nReconciliation Loops]
+        CM -->|Watch desired vs actual| APIServer
+    end
+    subgraph "Worker Node 1"
+        Kubelet1[kubelet\nNode Agent] -->|CRI gRPC| Containerd1[containerd]
+        Containerd1 --> Pod1A[Pod A]
+        Containerd1 --> Pod1B[Pod B]
+        KubeProxy1[kube-proxy\niptables/IPVS]
+    end
+    subgraph "Worker Node 2"
+        Kubelet2[kubelet] -->|CRI gRPC| Containerd2[containerd]
+        Containerd2 --> Pod2A[Pod C]
+        KubeProxy2[kube-proxy]
+    end
+    Scheduler -->|Assign Pod to Node| Kubelet1
+    Scheduler -->|Assign Pod to Node| Kubelet2
+    Kubelet1 -->|Status Reports| APIServer
+    Kubelet2 -->|Status Reports| APIServer
+    KubeProxy1 -->|Service ClusterIP| Pod1A
+    style APIServer fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style ETCD fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style Scheduler fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style CM fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① User submits a Pod spec via kubectl, which sends it to the API Server as a REST request → ② API Server validates the spec through admission controllers (mutating + validating webhooks) and persists it to etcd → ③ Scheduler watches for unscheduled Pods, scores candidate nodes using predicates (resource fit, affinity, taints) and priorities (bin-packing, spread), then binds the Pod to the best node → ④ kubelet on the selected node detects the new binding via API Server watch, pulls container images, and calls the Container Runtime Interface (CRI) to start containers → ⑤ containerd creates the container with Linux namespaces/cgroups for isolation → ⑥ kube-proxy programs iptables/IPVS rules so Service ClusterIPs route to healthy Pod endpoints → ⑦ Controller Manager runs reconciliation loops (Deployment, ReplicaSet, StatefulSet controllers) continuously comparing desired state in etcd vs actual state → ⑧ When drift is detected (Pod crash, node failure), controllers create/delete Pods to converge actual state back to desired state`,
   
     problem: "Running thousands of containerized services in production requires solving bin-packing (which container runs on which server?), health monitoring, rolling deployments, service discovery, and network routing — all simultaneously. Manual orchestration does not scale past a few dozen services.",
     solution: "Kubernetes provides a declarative API: you describe desired state (3 replicas of image X, with 2GB RAM), and a set of controllers continuously reconcile actual state to match. This self-healing loop handles node failures, rolling deployments, and autoscaling without human intervention.",
@@ -1152,6 +1252,33 @@ export const architectures: Architecture[] = [
     papers: [],
     diagramType: "database",
     videoWeek: 10,
+
+    mermaidDef: `graph TD
+    Client[SQL Client] --> Parser[Query Parser]
+    Parser --> Planner[Query Planner / Optimizer]
+    Planner --> Executor[Query Executor]
+    subgraph "MVCC Engine"
+        Executor --> BufferPool[Shared Buffer Pool]
+        BufferPool --> HeapTuples[Heap Tuples\nxmin / xmax versions]
+        HeapTuples --> VisibilityCheck[Visibility Check\nSnapshot vs xmin/xmax]
+    end
+    subgraph "WAL Subsystem"
+        Executor -->|Write-Ahead| WALBuffer[WAL Buffer]
+        WALBuffer --> WALSegment[WAL Segment Files\non Disk]
+        WALSegment --> StreamingRep[Streaming Replication\nto Standby]
+        WALSegment --> PITR[Point-in-Time Recovery]
+    end
+    subgraph "Background Processes"
+        AutoVacuum[autovacuum Worker] -->|Remove Dead Tuples| HeapTuples
+        BGWriter[Background Writer] -->|Flush Dirty Pages| Disk[Data Files on Disk]
+        Checkpointer[Checkpointer] -->|Periodic fsync| Disk
+    end
+    BufferPool --> Disk
+    style Client fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style WALBuffer fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style AutoVacuum fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style BufferPool fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① Client begins a transaction, receiving a unique transaction ID (xid) and a snapshot of all currently active transactions → ② For reads, the executor checks each tuple's xmin (creating xid) and xmax (deleting xid) against the snapshot — only tuples visible to this transaction's snapshot are returned (MVCC) → ③ For writes, PostgreSQL creates a NEW tuple version with the current xid as xmin; the old tuple's xmax is set to the current xid (old version remains for concurrent readers) → ④ Before modifying any data page, the change is first written to the WAL buffer as a redo record → ⑤ On COMMIT, WAL buffer is flushed (fsync) to WAL segment files on disk — this is the durability guarantee → ⑥ Dirty data pages in the shared buffer pool are lazily written to disk by the background writer and checkpointer → ⑦ autovacuum periodically scans heap pages, identifies tuples where xmax < oldest active snapshot (dead tuples), and reclaims their space → ⑧ WAL segments are streamed to standby replicas for hot standby and archived for point-in-time recovery (PITR)`,
   
     problem: "Databases need to handle concurrent reads and writes from thousands of connections without readers blocking writers or vice versa. Traditional lock-based concurrency causes contention at scale: a long-running read blocks all writes to the same rows, creating hotspots.",
     solution: "PostgreSQL implements MVCC (Multi-Version Concurrency Control): every write creates a new row version rather than updating in place. Readers see a consistent snapshot from their transaction start time without taking any locks. The Write-Ahead Log (WAL) ensures durability — every change is written to an append-only log before modifying data pages, enabling crash recovery and replication.",
@@ -1196,6 +1323,28 @@ export const architectures: Architecture[] = [
     papers: [],
     diagramType: "edge",
     videoWeek: 10,
+
+    mermaidDef: `graph TD
+    User[User Request] -->|DNS| AnycastBGP[Anycast BGP Routing]
+    AnycastBGP -->|Nearest PoP| PoP[Cloudflare PoP\n300+ Locations]
+    subgraph "Edge PoP"
+        PoP --> DDoS[L3/L4 DDoS Scrubbing\nMagic Transit]
+        DDoS --> WAF[L7 WAF\nManaged Rulesets]
+        WAF --> Cache[CDN Cache Layer\nTiered Caching]
+        Cache -->|Miss| Worker[Cloudflare Worker\nV8 Isolate]
+        Worker --> KV[Workers KV\nEventual Consistency]
+        Worker --> DO[Durable Objects\nStrong Consistency]
+        Worker --> R2[R2 Object Storage\nS3-Compatible]
+    end
+    Cache -->|Hit| Response[Edge Response]
+    Worker --> Response
+    Worker -->|Cache Miss| Origin[Origin Server]
+    Origin --> Response
+    style User fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style PoP fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style Worker fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style DDoS fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① User's DNS query resolves to a Cloudflare anycast IP — BGP routing directs the request to the nearest of 300+ PoPs worldwide (typically <20ms) → ② L3/L4 DDoS scrubbing (Magic Transit) drops volumetric attack traffic at the network edge using BPF filters → ③ L7 WAF applies managed rulesets (OWASP, bot detection) and custom rules to filter malicious HTTP requests → ④ CDN cache layer checks for a cached response (tiered caching checks regional then global tiers) → ⑤ On cache miss, request enters a Cloudflare Worker — a V8 isolate that cold-starts in <1ms (not a container, but an isolate sharing the V8 engine process) → ⑥ Worker executes JavaScript/WASM logic, reading from Workers KV (global eventually-consistent key-value store) or Durable Objects (single-instance strong consistency per object) → ⑦ If the Worker needs origin data, it fetches from the origin server with Argo Smart Routing (optimized network path) → ⑧ Response is cached at the edge per Cache-Control headers and returned to the user`,
   
     problem: "Traditional CDNs cache static files, but modern applications require dynamic computation at the edge — authentication, A/B testing, personalization, bot detection — without the 50-200ms round trip to an origin server. Serverless functions in datacenters add latency; containers take seconds to cold-start.",
     solution: "Cloudflare runs V8 JavaScript isolates — not containers or VMs — inside 300+ global Points of Presence. Isolates start in under 1ms (shared V8 process, isolated heap), enabling true serverless at the edge with geographic routing via anycast BGP. Workers KV and Durable Objects provide edge-local storage with strong consistency guarantees.",
@@ -1244,7 +1393,57 @@ export const architectures: Architecture[] = [
       { title: "FlashAttention: Fast and Memory-Efficient Exact Attention", authors: "Dao, T. et al.", year: 2022, url: "https://arxiv.org/abs/2205.14135" },
     ],
     diagramType: "llm-inference",
+    mermaidDef: `graph LR
+  subgraph Client
+    REQ[Prompt Request]
+  end
+  subgraph Load Balancing
+    LB[Load Balancer]
+    CBS[Continuous Batch Scheduler]
+  end
+  subgraph GPU Workers
+    PF[Prefill Phase]
+    KV[KV Cache]
+    PA[PagedAttention]
+    DEC[Decode Phase]
+  end
+  subgraph Output
+    TS[Token Sampler]
+    SR[Streamed Response]
+  end
+  REQ --> LB --> CBS --> PF --> KV
+  KV --> PA --> DEC --> TS --> SR
+  style PF fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style KV fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style DEC fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: " Request arrives with prompt tokens   Continuous batching scheduler groups requests   Prefill phase processes all prompt tokens in parallel   KV cache stores keys/values per layer  ⑤ Decode phase generates one token per step   PagedAttention manages KV cache memory in pages",
     videoWeek: 11,
+
+    mermaidDef: `graph TD
+    Prompt[Input Prompt] --> Tokenizer[Tokenizer\nBPE Encoding]
+    Tokenizer --> Embedding[Token + Position\nEmbedding Layer]
+    subgraph "Transformer Stack (N Layers)"
+        Embedding --> FlashAttn[FlashAttention\nIO-Aware Fused Kernel]
+        FlashAttn --> KVCache[KV Cache\nPagedAttention Blocks]
+        KVCache --> FFN[Feed-Forward Network\nGeLU Activation]
+        FFN --> LayerNorm[RMSNorm + Residual]
+    end
+    subgraph "Parallelism"
+        GPU1[GPU 0\nTensor Shard A]
+        GPU2[GPU 1\nTensor Shard B]
+        GPU1 <-->|AllReduce via NVLink| GPU2
+    end
+    LayerNorm --> LMHead[LM Head\nLogits Projection]
+    LMHead --> Sampler[Sampling\nTop-p / Temperature]
+    Sampler --> Detokenizer[Detokenizer\nOutput Text]
+    Sampler -->|Next Token| Embedding
+    LayerNorm --> GPU1
+    LayerNorm --> GPU2
+    style Prompt fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style FlashAttn fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style KVCache fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style Sampler fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① Input prompt is tokenized via BPE into token IDs and passed through the embedding layer (token + rotary position embeddings) → ② Prefill phase: all prompt tokens are processed in parallel through the transformer stack — FlashAttention computes Q·K^T/√d and softmax in fused SRAM tiles (3× less HBM IO than standard attention) → ③ KV cache stores the computed Key and Value tensors for every layer so they are not recomputed during generation → ④ Decode phase: model generates one token at a time autoregressively — each step reads the full KV cache but only computes attention for the new token → ⑤ Tensor parallelism shards weight matrices across GPUs; each GPU computes a slice of every layer, synchronized via AllReduce over NVLink after each layer → ⑥ Continuous batching (iteration-level scheduling) inserts new requests into the batch mid-generation, maximizing GPU utilization → ⑦ LM Head projects hidden states to vocabulary logits; top-p/temperature sampling selects the next token → ⑧ Generated token is fed back into the embedding layer for the next decode step until EOS or max length`,
   
     problem: "A transformer model with 70B parameters has weights totaling ~140GB in FP16. Generating each output token requires loading all weights through GPU memory bandwidth. A 70B model on an A100 takes ~80GB VRAM and generates only 20-30 tokens/second, making it far too slow and expensive to serve millions of users.",
     solution: "LLM inference engineering attacks the memory-bandwidth bottleneck through KV caching (skip recomputing prompt attention), FlashAttention (IO-aware attention reducing memory traffic 3x), quantization (INT8/INT4 reducing weights 2-4x), and continuous batching (process many user requests in one GPU forward pass). Together, these optimizations achieve 10-50x throughput over a naive baseline.",
@@ -1291,6 +1490,32 @@ export const architectures: Architecture[] = [
     ],
     diagramType: "rag",
     videoWeek: 11,
+
+    mermaidDef: `graph TD
+    subgraph "Ingestion Pipeline"
+        Docs[Documents\nPDF/HTML/MD] --> Parser[Document Parser\nUnstructured]
+        Parser --> Chunker[Chunker\nRecursive Splitting]
+        Chunker --> Embedder[Embedding Model\ntext-embedding-3]
+        Embedder --> VectorDB[Vector Database\nHNSW Index]
+    end
+    subgraph "Retrieval Pipeline"
+        Query[User Query] --> QueryEmbed[Query Encoder]
+        QueryEmbed --> ANN[ANN Search\nTop-K Candidates]
+        ANN --> Reranker[Cross-Encoder\nReranker]
+        Reranker --> TopDocs[Top-N Relevant Chunks]
+    end
+    VectorDB --> ANN
+    subgraph "Generation"
+        TopDocs --> PromptBuilder[Prompt Builder\nSystem + Context + Query]
+        PromptBuilder --> LLM[LLM\nGPT-4 / Claude]
+        LLM --> Answer[Generated Answer\nwith Citations]
+    end
+    Answer --> Evaluator[Hallucination Evaluator\nFaithfulness Score]
+    style Query fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style VectorDB fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style LLM fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style Reranker fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① Documents (PDF, HTML, Markdown) are parsed and cleaned by a document processor (e.g., Unstructured) → ② Recursive text splitter chunks documents into 256–512 token segments with overlap to preserve context at boundaries → ③ Each chunk is passed through an embedding model (e.g., text-embedding-3-large, 1536-dim) producing a dense vector → ④ Vectors are inserted into a vector database with HNSW index for sub-millisecond ANN search → ⑤ At query time, the user query is encoded with the same embedding model → ⑥ ANN search retrieves top-K candidate chunks (typically K=20–50) based on cosine similarity → ⑦ A cross-encoder reranker scores each (query, chunk) pair with full token-level attention, reordering to top-N most relevant → ⑧ Prompt builder assembles system instructions + retrieved context + user query into a structured prompt → ⑨ LLM generates an answer grounded in the retrieved context, with inline citations → ⑩ Hallucination evaluator checks each claim against source chunks using NLI, flagging unsupported assertions`,
   
     problem: "Large language models have knowledge cutoffs and hallucinate facts confidently. Retraining a model costs millions of dollars and takes months, making it impractical to keep models updated with new documents, proprietary knowledge bases, or real-time information.",
     solution: "Retrieval-Augmented Generation (RAG) keeps model weights frozen and instead injects relevant context at inference time. When a query arrives, a retrieval system searches a vector database of document embeddings, finds the K most relevant chunks, and appends them to the LLM prompt. The LLM generates its response grounded in retrieved facts — dramatically reducing hallucination.",
@@ -1337,6 +1562,36 @@ export const architectures: Architecture[] = [
     ],
     diagramType: "vector-db",
     videoWeek: 12,
+
+    mermaidDef: `graph TD
+    Insert[Vector Insert\n1536-dim] --> Quantize[Quantization\nPQ / SQ]
+    Quantize --> HNSWBuild[HNSW Graph Builder]
+    subgraph "HNSW Index (Multi-Layer)"
+        L2[Layer 2\nSparse Entry Points]
+        L1[Layer 1\nMedium Density]
+        L0[Layer 0\nAll Vectors]
+        L2 -->|Greedy Descent| L1
+        L1 -->|Greedy Descent| L0
+    end
+    HNSWBuild --> L0
+    Query[Query Vector] --> L2
+    L0 --> Candidates[ANN Candidates\nTop-100]
+    Candidates --> MetaFilter[Metadata Filter\nPre/Post Filter]
+    MetaFilter --> Rescore[Exact Rescore\nOriginal Vectors]
+    Rescore --> TopK[Top-K Results]
+    subgraph "Storage Layer"
+        MemMap[Memory-Mapped Vectors]
+        WAL[Write-Ahead Log]
+        Shard1[Shard 1]
+        Shard2[Shard 2]
+    end
+    L0 --- MemMap
+    Insert --> WAL
+    style Query fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style L0 fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style HNSWBuild fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style TopK fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① High-dimensional vector (e.g., 1536-dim from OpenAI) arrives for insertion → ② Vector is optionally quantized via Product Quantization (PQ) or Scalar Quantization (SQ) to reduce memory footprint (64× compression with PQ) → ③ HNSW graph builder assigns the vector a random max layer (exponential distribution) and inserts it by connecting to nearest neighbors at each layer via greedy search → ④ At query time, search enters the HNSW graph at the top layer's entry point → ⑤ Greedy traversal at each layer finds the closest neighbor, then descends to the next layer using that neighbor as the new entry point → ⑥ At layer 0 (densest), the algorithm expands the search beam (ef_search parameter) to collect top-100 ANN candidates → ⑦ Metadata filters (category, date, tenant) are applied — pre-filtering prunes before ANN search, post-filtering removes after → ⑧ Candidates are rescored against original full-precision vectors for exact distance → ⑨ Final top-K results are returned, with recall@10 typically 95–99% depending on HNSW parameters (M, ef_construction)`,
   
     problem: "Machine learning models generate high-dimensional vector embeddings (1536-dim text, 512-dim images, 768-dim audio) that encode semantic meaning. Finding the most similar vectors to a query vector in a dataset of 1 billion embeddings using brute-force cosine similarity requires 1 billion multiplications per query — far too slow for real-time search.",
     solution: "Vector databases use Approximate Nearest Neighbor (ANN) algorithms — primarily HNSW (Hierarchical Navigable Small World graphs) and IVF (Inverted File Index) — to answer nearest-neighbor queries in O(log N) time with configurable recall. A 95% recall@10 search on 1 billion vectors typically takes under 10ms, enabling real-time semantic search at billion scale.",
@@ -1381,6 +1636,33 @@ export const architectures: Architecture[] = [
     papers: [],
     diagramType: "gateway",
     videoWeek: 12,
+
+    mermaidDef: `graph TD
+    Client[Application Client] --> Auth[Auth & API Key\nValidation]
+    Auth --> RateLimiter[Token Bucket\nRate Limiter\nper user/team]
+    RateLimiter --> SemCache[Semantic Cache\nEmbedding Similarity]
+    SemCache -->|Cache Hit| Response[Response to Client]
+    SemCache -->|Cache Miss| Router[Model Router\nCost vs Quality]
+    subgraph "Provider Pool"
+        OpenAI[OpenAI\nGPT-4o]
+        Anthropic[Anthropic\nClaude 3.5]
+        Local[Self-Hosted\nLlama 3]
+    end
+    Router --> OpenAI
+    Router --> Anthropic
+    Router --> Local
+    Router -->|Primary Fails| Fallback[Fallback Chain\nRetry with Next Provider]
+    Fallback --> Anthropic
+    OpenAI --> CostTracker[Cost Tracker\nTokens per Team]
+    Anthropic --> CostTracker
+    Local --> CostTracker
+    CostTracker --> Response
+    CostTracker --> Dashboard[Usage Dashboard\nBudget Alerts]
+    style Client fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style Router fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style RateLimiter fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style SemCache fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① Application sends a request with API key and model preference → ② Gateway authenticates the key and resolves team/user identity for quota enforcement → ③ Token bucket rate limiter checks token budget (not request count — LLMs charge per token), with separate limits for input and output tokens → ④ Semantic cache embeds the prompt and checks cosine similarity against cached prompt-response pairs (threshold ~0.95) — a hit returns instantly without calling any provider → ⑤ On cache miss, the model router selects the optimal provider based on routing rules: cheapest model meeting quality tier, latency SLA, and provider health status → ⑥ Request is forwarded to the selected provider (OpenAI, Anthropic, or self-hosted) → ⑦ If the primary provider fails (rate limit, timeout, 5xx), the fallback chain retries with the next provider in priority order → ⑧ Response streams back through the gateway; cost tracker records input/output token counts, calculates cost per team, and checks against budget thresholds → ⑨ Usage metrics feed into dashboards with real-time budget alerts and per-team cost attribution`,
   
     problem: "Organizations using multiple LLM providers face runaway costs, reliability gaps when a provider is down, token-based rate limits that differ from request-based limits, and no visibility into which teams or features are consuming how much AI budget. Managing this directly in application code creates a fragmented, unmanageable mess.",
     solution: "An LLM API gateway sits between applications and LLM providers, providing unified token-aware rate limiting, cost attribution, intelligent model routing, semantic caching, and fallback chains — all transparent to the calling application. Token bucket algorithms track per-user/team token consumption; semantic caching returns cached responses for similar (not just identical) prompts.",
@@ -1427,6 +1709,40 @@ export const architectures: Architecture[] = [
     ],
     diagramType: "multi-agent",
     videoWeek: 13,
+
+    mermaidDef: `graph TD
+    User[User Task Input] --> Planner[Planner Agent\nTask Decomposition]
+    Planner --> TaskQueue[Task Queue\nOrdered Subtasks]
+    subgraph "Executor Pool"
+        Exec1[Research Agent\nWeb Search Tool]
+        Exec2[Code Agent\nCode Interpreter]
+        Exec3[Data Agent\nSQL + API Tools]
+    end
+    TaskQueue --> Exec1
+    TaskQueue --> Exec2
+    TaskQueue --> Exec3
+    Exec1 -->|Tool Call| Tools1[Search API]
+    Exec2 -->|Tool Call| Tools2[Sandbox Runtime]
+    Exec3 -->|Tool Call| Tools3[Database / API]
+    subgraph "Memory Layer"
+        ShortMem[Short-Term Memory\nConversation Buffer]
+        LongMem[Long-Term Memory\nVector Store]
+        EpisodicMem[Episodic Memory\nPast Task Outcomes]
+    end
+    Exec1 --> ShortMem
+    Exec2 --> LongMem
+    Exec3 --> EpisodicMem
+    Exec1 --> Critic[Critic Agent\nOutput Reviewer]
+    Exec2 --> Critic
+    Exec3 --> Critic
+    Critic -->|Revision Needed| TaskQueue
+    Critic -->|Approved| FinalOutput[Final Output]
+    Critic --> HumanReview[Human-in-the-Loop\nCheckpoint]
+    style Planner fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style Critic fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style User fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style ShortMem fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① User submits a complex task to the orchestrator → ② Planner agent decomposes the task into an ordered list of subtasks with dependencies (LangGraph state machine defines the execution graph) → ③ Each subtask is dispatched to a specialized executor agent — research agent for information gathering, code agent for computation, data agent for structured queries → ④ Executor agents run ReAct loops: Reason about the subtask → Act by calling tools (web search, code interpreter, SQL) → Observe results → repeat until subtask is complete → ⑤ Tool calls are executed in sandboxed environments; function calling schema enforces structured input/output → ⑥ Short-term memory (conversation buffer) tracks the current task state; long-term memory (vector store) provides relevant context from past interactions; episodic memory records outcomes of similar past tasks → ⑦ Critic agent reviews each executor's output for quality, completeness, and consistency → ⑧ If output fails review, the critic sends it back to the task queue with revision instructions (reflection loop) → ⑨ For high-stakes decisions, human-in-the-loop checkpoints pause execution for human approval before proceeding`,
   
     problem: "Complex tasks like software development, research analysis, and multi-step planning exceed the context window and capabilities of a single LLM call. A single agent writing and running code, debugging errors, searching documentation, and formatting outputs creates context window pressure, error accumulation, and poor maintainability.",
     solution: "Multi-agent systems decompose complex tasks across specialized agents orchestrated by a planner. Each agent has a focused role (code writer, test runner, critic, researcher) with specific tools and context. LangGraph models the orchestration as a directed cyclic graph — agents communicate via structured messages, can loop, branch, and call tools, with human-in-the-loop checkpoints at critical decision points.",
@@ -1473,7 +1789,48 @@ export const architectures: Architecture[] = [
       { title: "QLoRA: Efficient Finetuning of Quantized LLMs", authors: "Dettmers, T. et al.", year: 2023, url: "https://arxiv.org/abs/2305.14314" },
     ],
     diagramType: "training-pipeline",
+    mermaidDef: `graph LR
+  RD[Raw Data] --> DC[Data Curator]
+  DC -->|dedup + quality filter| TD[Training Dataset]
+  subgraph Training
+    BM[Base Model - frozen] --> LA[LoRA Adapters]
+    LA --> FSDP[FSDP / DeepSpeed]
+  end
+  TD --> Training
+  Training --> CP[Checkpoint]
+  CP --> EB[Eval Benchmarks]
+  EB --> MM[Merged Model]
+  MM --> DEP[Deployment]
+  style DC fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style FSDP fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style EB fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: " Raw data collected and filtered   Curator deduplicates and quality-scores   LoRA adapters initialized on frozen base   Distributed training via FSDP/DeepSpeed   Validation loss monitored with early stopping   Eval on benchmarks before deployment",
     videoWeek: 13,
+
+    mermaidDef: `graph TD
+    RawData[Raw Training Data] --> Curation[Data Curation\nFiltering & Dedup]
+    Curation --> Formatter[Instruction Formatter\nChat Template]
+    Formatter --> Tokenizer[Tokenizer\nPadding & Truncation]
+    subgraph "Training Infrastructure"
+        BaseModel[Base Model\nFrozen Weights]
+        LoRA[LoRA Adapters\nRank 16-64]
+        BaseModel --- LoRA
+        LoRA --> TrainLoop[Training Loop\nGradient Accumulation]
+        TrainLoop --> DeepSpeed[DeepSpeed ZeRO\nDistributed Training]
+    end
+    Tokenizer --> TrainLoop
+    subgraph "Evaluation & Deployment"
+        TrainLoop --> EvalHarness[Evaluation Harness\nMMLU / HumanEval]
+        EvalHarness --> Merge[Adapter Merge\nLoRA into Base]
+        Merge --> Quantize[GPTQ/AWQ\nQuantization]
+        Quantize --> Deploy[Model Registry\nDeploy to Serving]
+    end
+    DPO[DPO / RLHF\nPreference Alignment] --> TrainLoop
+    style RawData fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style LoRA fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style TrainLoop fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style EvalHarness fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① Raw data (instruction-response pairs, domain documents, human feedback) is curated — filtering low-quality examples, deduplicating near-duplicates, and balancing categories → ② Data is formatted into the model's chat template (e.g., ChatML) with system/user/assistant roles → ③ Tokenizer encodes text into token IDs with padding/truncation to max sequence length → ④ Base model weights are frozen; LoRA injects small trainable adapter matrices (rank 16–64) into attention layers — reducing trainable parameters by 10,000× → ⑤ QLoRA variant quantizes base model to 4-bit NormalFloat while training adapters in BF16, enabling 65B fine-tuning on a single 48GB GPU → ⑥ Training loop runs with gradient accumulation across micro-batches; DeepSpeed ZeRO shards optimizer states across GPUs for multi-node training → ⑦ DPO (Direct Preference Optimization) or RLHF aligns the model with human preferences using chosen/rejected response pairs → ⑧ Evaluation harness benchmarks the fine-tuned model on standard tasks (MMLU, HumanEval, domain-specific evals) → ⑨ LoRA adapters are merged back into the base model weights → ⑩ Merged model is quantized (GPTQ/AWQ to 4-bit) and deployed to the serving infrastructure`,
   
     problem: "Training a new LLM from scratch costs $10M-$100M in compute and takes months. Yet organizations need models specialized to their domain (legal, medical, code) or aligned with their specific style and tone. General-purpose models like GPT-4 are capable but not optimized for specialized tasks and cannot be customized.",
     solution: "Fine-tuning adapts a pre-trained model's behavior by continuing training on a smaller domain-specific dataset. LoRA (Low-Rank Adaptation) makes this practical: instead of updating 70 billion parameters, it freezes the base model and adds tiny adapter matrices (millions of parameters) that capture domain-specific changes. QLoRA further enables fine-tuning a 65B model on a single 48GB GPU through 4-bit quantization.",
@@ -1519,7 +1876,56 @@ export const architectures: Architecture[] = [
       { title: "Efficient Memory Management for Large Language Model Serving with PagedAttention", authors: "Kwon, W. et al. (vLLM)", year: 2023, url: "https://arxiv.org/abs/2309.06180" },
     ],
     diagramType: "kv-cache",
+    mermaidDef: `graph LR
+  REQ[Request] --> PH[Prefix Hash]
+  PH --> RT[Radix Tree Cache]
+  subgraph Cache Hit
+    LKV[Load KV Tensors] --> SP[Skip Prefill]
+  end
+  subgraph Cache Miss
+    FP[Full Prefill] --> STR[Store in Radix Tree]
+  end
+  RT -->|hit| Cache Hit
+  RT -->|miss| Cache Miss
+  Cache Hit --> PA[PagedAttention]
+  Cache Miss --> PA
+  PA --> DEC[Decode] --> RES[Response]
+  style RT fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style PA fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style LKV fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: " Request arrives with system prompt and query   Prefix hash computed for system prompt   Radix tree checked for cached prefix   Cache hit reloads KV tensors, skips prefill   Cache miss runs full prefill, stores KV   PagedAttention allocates pages, LRU evicts cold entries",
     videoWeek: 14,
+
+    mermaidDef: `graph TD
+    Request[Incoming Request\nSystem + User Prompt] --> PrefixMatch[Prefix Matcher\nRadix Tree Lookup]
+    PrefixMatch -->|Cache Hit| ReuseKV[Reuse Cached KV Blocks\nSkip Prefill for Prefix]
+    PrefixMatch -->|Cache Miss| FullPrefill[Full Prefill\nCompute All KV Pairs]
+    subgraph "PagedAttention KV Store"
+        BlockAlloc[Block Allocator\nVirtual Memory Pages]
+        PhysBlocks[Physical KV Blocks\nGPU HBM]
+        BlockTable[Block Table\nLogical-to-Physical Map]
+        BlockAlloc --> PhysBlocks
+        BlockAlloc --> BlockTable
+    end
+    ReuseKV --> BlockAlloc
+    FullPrefill --> BlockAlloc
+    subgraph "Decode Loop"
+        Decode[Autoregressive Decode\nOne Token per Step]
+        Decode -->|Append KV| PhysBlocks
+        Decode --> Speculative[Speculative Decoding\nDraft Model Predicts N]
+        Speculative -->|Verify Batch| Decode
+    end
+    PhysBlocks --> Decode
+    subgraph "Eviction Policy"
+        LRU[LRU Eviction\nPrefix Popularity]
+        PhysBlocks -->|Memory Pressure| LRU
+        LRU -->|Evict Cold Blocks| PhysBlocks
+    end
+    style Request fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style PrefixMatch fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style BlockAlloc fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style Decode fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① Incoming request with system prompt + user message arrives at the inference server → ② Radix tree-based prefix matcher checks if the system prompt (or any prefix) has been seen before and its KV cache blocks are still in GPU memory → ③ On cache hit, the cached KV blocks are reused — prefill computation is skipped for the matched prefix, saving significant GPU compute (especially for long system prompts shared across users) → ④ On cache miss, full prefill runs: all prompt tokens are processed through the transformer stack to compute K and V tensors for every layer → ⑤ PagedAttention allocates KV cache in fixed-size blocks (like OS virtual memory pages) via a block allocator — no pre-allocation of max sequence length, eliminating internal fragmentation → ⑥ Block table maps logical KV positions to physical GPU HBM addresses, enabling non-contiguous memory storage → ⑦ During autoregressive decoding, each new token's KV pair is appended to the next available block; new blocks are allocated on demand → ⑧ Speculative decoding uses a small draft model to predict N tokens ahead, then the main model verifies all N in a single forward pass — accepting correct predictions for free → ⑨ When GPU memory is full, LRU eviction removes the least recently used prefix cache blocks, prioritizing frequently reused system prompts`,
   
     solution: "PagedAttention from vLLM manages the KV cache using a virtual memory paging metaphor: cache is divided into fixed-size blocks (pages) that are allocated on demand and freed when a request completes. Blocks are mapped to physical GPU memory via a block table — just like OS virtual memory. This eliminates internal and external fragmentation, enabling the GPU to run 2-4x more concurrent requests with the same memory.",
     deepDive: [
@@ -1564,7 +1970,49 @@ export const architectures: Architecture[] = [
       { title: "Precise Zero-Shot Dense Retrieval without Relevance Labels (HyDE)", authors: "Gao, L. et al.", year: 2022, url: "https://arxiv.org/abs/2212.10496" },
     ],
     diagramType: "hybrid-search",
+    mermaidDef: `graph LR
+  Q[Query] --> BM25[BM25 Inverted Index]
+  Q --> DE[Dense Embedder]
+  DE --> VDB[Vector DB]
+  subgraph Parallel Retrieval
+    BM25
+    VDB
+  end
+  BM25 --> RRF[RRF Fusion]
+  VDB --> RRF
+  RRF --> CER[Cross-Encoder Reranker]
+  CER --> TOP[Top-5 Documents]
+  TOP --> LLM[LLM Context]
+  LLM --> ANS[Answer]
+  style RRF fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style CER fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style LLM fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: " Query arrives for retrieval   BM25 sparse and dense embedding search run in parallel   RRF fusion combines rankings without score normalization   Cross-encoder reranks top-20 with full attention   HyDE optionally generates hypothetical answer for recall   Top-5 results passed to LLM as context",
     videoWeek: 14,
+
+    mermaidDef: `graph TD
+    Query[User Query] --> HyDE[HyDE Generator\nLLM Hypothetical Doc]
+    Query --> BM25[BM25 Search\nInverted Index]
+    HyDE --> DenseEnc[Dense Bi-Encoder\nEmbedding Model]
+    Query --> DenseEnc
+    subgraph "Parallel Retrieval"
+        BM25 --> BM25Results[BM25 Ranked List]
+        DenseEnc --> ANNSearch[HNSW ANN Search]
+        ANNSearch --> DenseResults[Dense Ranked List]
+    end
+    subgraph "Fusion & Reranking"
+        BM25Results --> RRF[Reciprocal Rank Fusion\nRRF k=60]
+        DenseResults --> RRF
+        RRF --> TopCandidates[Top-50 Candidates]
+        TopCandidates --> CrossEncoder[Cross-Encoder\nReranker]
+        CrossEncoder --> FinalResults[Final Top-10\nResults]
+    end
+    FinalResults --> LLM[LLM Generator\nRAG Context]
+    style Query fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style RRF fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style CrossEncoder fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style HyDE fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① User query arrives at the hybrid search pipeline → ② (Optional) HyDE step: LLM generates a hypothetical document that would answer the query — this synthetic text is embedded alongside the original query for better retrieval of semantically related content → ③ BM25 path: query terms are looked up in the inverted index, scoring documents by term frequency, inverse document frequency, and length normalization → ④ Dense path: query (and optional HyDE doc) is encoded by a bi-encoder embedding model, then HNSW ANN search retrieves top-K nearest vectors from the dense index → ⑤ Both ranked lists feed into Reciprocal Rank Fusion — RRF_score(d) = Σ 1/(k + rank_i(d)) where k=60, combining rankings without needing score normalization → ⑥ Top-50 fused candidates are passed to a cross-encoder reranker, which processes each (query, document) pair through a single transformer for deep token-level interaction scoring → ⑦ Cross-encoder reorders candidates by relevance, producing the final top-10 results with significantly higher NDCG@10 than either retriever alone → ⑧ Final results are injected as context into the LLM prompt for grounded answer generation`,
     problem: "Pure dense vector search misses exact keyword matches (product IDs, error codes, acronyms) while BM25 keyword search misses semantic paraphrases and intent. In production RAG pipelines, using either approach alone yields 15–30% lower recall than users expect. The challenge is fusing heterogeneous ranking signals — sparse lexical scores and dense cosine similarities operate on entirely different scales — without requiring expensive labeled training data.",
     solution: "Hybrid search runs BM25 and dense retrieval in parallel, then fuses results using Reciprocal Rank Fusion (RRF), which combines rankings without needing score normalization. A cross-encoder re-ranker then scores the top-K fused results for final ordering. Query expansion via HyDE (Hypothetical Document Embeddings) generates a synthetic answer with the LLM and embeds it alongside the original query, dramatically improving recall for ambiguous or short queries.",
     scalingNumbers: [
@@ -1609,7 +2057,50 @@ export const architectures: Architecture[] = [
       { title: "Constitutional AI: Harmlessness from AI Feedback", authors: "Bai, Y. et al. (Anthropic)", year: 2022, url: "https://arxiv.org/abs/2212.08073" },
     ],
     diagramType: "safety",
+    mermaidDef: `graph LR
+  UP[User Prompt] --> IC[Input Classifier]
+  subgraph Safe Path
+    LLM[LLM Generation] --> OC[Output Classifier]
+    OC --> CAI[Constitutional AI Critique]
+  end
+  subgraph Block Path
+    REJ[Rejected + Logged]
+  end
+  IC -->|safe| Safe Path
+  IC -->|harmful| Block Path
+  CAI --> SR[Safe Response]
+  SR --> RLHF[RLHF Feedback Loop]
+  style IC fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style OC fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style CAI fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: " User prompt arrives at input classifier   Classifier screens for harmful content and jailbreaks   Blocked prompts rejected with logged reason   Safe prompts proceed to LLM generation   Output classifier checks for policy violations   Constitutional AI self-critique returns safe response",
     videoWeek: 15,
+
+    mermaidDef: `graph TD
+    UserInput[User Input] --> InputClassifier[Input Classifier\nPrompt Injection Detection]
+    InputClassifier --> PIIDetector[PII Detector\nNER + Regex]
+    PIIDetector -->|Redact PII| SanitizedInput[Sanitized Prompt]
+    subgraph "Aligned Model"
+        SanitizedInput --> LLM[LLM\nConstitutional AI + RLHF]
+        Constitution[Constitution\n15-20 Principles] -->|Training-Time Alignment| LLM
+        RLHF[Reward Model\nHuman Preferences] -->|RL Fine-Tuning| LLM
+    end
+    LLM --> OutputClassifier[Output Classifier\nToxicity + Harm]
+    OutputClassifier --> HallucinationCheck[Hallucination Detector\nNLI Verification]
+    HallucinationCheck -->|Pass| Response[Safe Response]
+    HallucinationCheck -->|Fail| HumanQueue[Human Review Queue]
+    OutputClassifier -->|Flagged| HumanQueue
+    subgraph "Red Team Loop"
+        RedTeam[Red Team\nAdversarial Attacks]
+        RedTeam -->|Probe| InputClassifier
+        RedTeam -->|Update Rules| OutputClassifier
+        RedTeam -->|Retrain| RLHF
+    end
+    style UserInput fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style LLM fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style InputClassifier fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style OutputClassifier fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① User input arrives and is immediately screened by an input classifier (fine-tuned DeBERTa) that detects prompt injections, jailbreak attempts, and malicious instruction patterns with 95–99% recall → ② PII detector (NER model + regex patterns) identifies and redacts personally identifiable information (emails, SSNs, phone numbers) before the prompt reaches the model → ③ Sanitized prompt is processed by the LLM, which has been aligned during training via Constitutional AI (self-critique against 15–20 written principles) and RLHF (reward model trained on human preference labels) → ④ Generated output passes through an output classifier that scores for toxicity, violence, hate speech, and dangerous content across multiple harm categories → ⑤ Hallucination detector uses NLI (Natural Language Inference) to verify each claim against source documents, flagging unsupported assertions → ⑥ Clean responses are delivered to the user; flagged outputs are routed to a human review queue for manual assessment → ⑦ Continuous red-team loop: adversarial testers probe the system with novel attack vectors (GCG suffixes, multi-turn manipulation, indirect injection via retrieved docs), updating classifier rules and retraining alignment as new vulnerabilities are found`,
     problem: "Production LLM applications face adversarial prompt injections, jailbreaks that bypass safety training, hallucinated outputs presented as fact, and PII/sensitive data leakage. No single safety mechanism is reliable — RLHF-aligned models can still be manipulated with sophisticated multi-turn attacks, and output classifiers have both false positive and false negative rates that degrade user experience or miss harmful content.",
     solution: "Defense in depth layers multiple safety mechanisms: input classifiers detect prompt injections and PII before reaching the model, Constitutional AI and RLHF align the model during training, structured output schemas constrain generation, output classifiers check for toxicity and hallucination, and human review queues handle high-risk edge cases. Each layer catches what others miss, and the system degrades gracefully when individual components fail.",
     scalingNumbers: [
@@ -1654,7 +2145,56 @@ export const architectures: Architecture[] = [
       { title: "Orca: A Distributed Serving System for Transformer-Based Generative Models", authors: "Yu, G. et al.", year: 2022, url: "https://www.usenix.org/conference/osdi22/presentation/yu" },
     ],
     diagramType: "serving",
+    mermaidDef: `graph LR
+  REQ[Request] --> LB[Load Balancer]
+  LB --> MR[Model Registry]
+  subgraph Prefill Fleet
+    HCG[High-Compute GPUs] --> TP[Tensor Parallel]
+  end
+  MR --> Prefill Fleet
+  Prefill Fleet --> KV[KV Cache Transfer]
+  subgraph Decode Fleet
+    HMG[High-Memory GPUs] --> ARD[Autoregressive Decode]
+  end
+  KV --> Decode Fleet
+  Decode Fleet --> TS[Token Stream] --> CLI[Client]
+  CLI --> AS[Autoscaler]
+  style LB fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style TP fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style ARD fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: " Request hits load balancer and model registry   Prefill fleet processes prompt on high-compute GPUs   KV cache transferred to decode fleet   Decode fleet generates tokens autoregressively   Tensor parallelism splits model across GPUs   Tokens streamed back, autoscaler adjusts fleet size",
     videoWeek: 15,
+
+    mermaidDef: `graph TD
+    Request[Client Request] --> LB[Load Balancer\nL7 Routing]
+    subgraph "Triton Inference Server"
+        LB --> Batcher[Continuous Batcher\nIteration-Level Scheduling]
+        Batcher --> Scheduler[Request Scheduler\nPriority Queue]
+    end
+    subgraph "GPU Cluster (Tensor Parallel)"
+        Scheduler --> GPU0[GPU 0\nTP Shard Layers 0-N]
+        Scheduler --> GPU1[GPU 1\nTP Shard Layers 0-N]
+        Scheduler --> GPU2[GPU 2\nPP Stage 2]
+        GPU0 <-->|AllReduce NVLink| GPU1
+        GPU1 -->|Activations InfiniBand| GPU2
+    end
+    subgraph "Memory Subsystem"
+        GPU0 --> KVCache[PagedAttention\nKV Cache Blocks]
+        Quantized[GPTQ/AWQ 4-bit\nModel Weights] --> GPU0
+        Quantized --> GPU1
+    end
+    GPU2 --> Streamer[Token Streamer\nSSE / gRPC Stream]
+    Streamer --> Response[Client Response]
+    subgraph "Autoscaler"
+        Metrics[GPU Util + Queue Depth\nCustom Metrics] --> HPA[Kubernetes HPA\nScale GPU Pods]
+        HPA --> PreWarm[Pre-Warm Pool\nStandby Pods with Model Loaded]
+    end
+    Scheduler --> Metrics
+    style Request fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style Batcher fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style GPU0 fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+    style KVCache fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: `① Client request hits the L7 load balancer, which routes based on model name and available capacity → ② Triton Inference Server's continuous batcher collects incoming requests and inserts them into the active batch at iteration granularity — when a request finishes (EOS), a new request immediately takes its slot with zero GPU idle time → ③ Request scheduler manages a priority queue, balancing batch size against available GPU memory (each active request's KV cache grows with sequence length) → ④ Model weights (quantized to 4-bit via GPTQ or AWQ for 75% memory reduction) are loaded from HBM; tensor parallelism shards each layer's weight matrices across GPUs within a node, synchronized via AllReduce over NVLink → ⑤ Pipeline parallelism splits the model by layer groups across nodes — GPU 0–1 handle early layers (TP), GPU 2+ handle later layers (PP), with activation tensors passed between stages over InfiniBand → ⑥ PagedAttention manages KV cache as dynamically allocated memory pages — no pre-allocation waste, enabling 2–4× more concurrent requests per GPU → ⑦ Generated tokens stream back to the client via SSE or gRPC streaming for low time-to-first-token → ⑧ Autoscaler monitors GPU utilization, request queue depth, and tokens/sec throughput; Kubernetes HPA scales GPU pods, with pre-warm pools keeping standby replicas (model pre-loaded) to avoid 30–120s cold start latency`,
     problem: "Serving large language models at production scale faces extreme resource constraints: a 70B parameter model requires 140GB of GPU memory in FP16, far exceeding a single GPU's capacity. Naive request handling wastes GPU compute — sequential processing leaves the GPU idle during memory-bound decoding, and fixed batch sizes either underutilize hardware or add unacceptable latency. Autoscaling GPU infrastructure is 10–100× more expensive than CPU, making cost optimization critical.",
     solution: "Modern LLM serving combines model parallelism (tensor parallel across GPUs within a node, pipeline parallel across nodes), continuous batching to maximize GPU utilization by dynamically adding/removing requests mid-generation, quantization (GPTQ/AWQ for 4-bit weights) to reduce memory footprint by 4×, and PagedAttention for efficient KV cache management. NVIDIA Triton Inference Server provides multi-model serving with dynamic batching, while Kubernetes HPA with custom GPU metrics enables autoscaling.",
     scalingNumbers: [
