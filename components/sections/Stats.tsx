@@ -1,7 +1,7 @@
 const stats = [
   { value: "30", label: "Architecture Deep-Dives", sublabel: "Real-world systems" },
   { value: "10+", label: "LLM & AI Systems", sublabel: "Latest research papers" },
-  { value: "$5/mo", label: "3× Cheaper Than ByteByteGo", sublabel: "vs $15/mo competitors" },
+  { value: "FAANG", label: "Interview Questions", sublabel: "5 per architecture" },
   { value: "2025", label: "Papers Referenced", sublabel: "Latest research included" },
 ];
 

@@ -46,7 +46,7 @@ export default function Hero() {
               href="/subscribe"
               className="group flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold text-lg hover:opacity-90 transition-all glow-blue shadow-2xl"
             >
-              Start Learning — $5/month
+              Start Learning Free
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
@@ -60,7 +60,7 @@ export default function Hero() {
 
           {/* Value line */}
           <p className="text-xs text-[var(--text-muted)] mb-10">
-            Built by a Microsoft engineer · $5/mo · 3× cheaper than ByteByteGo
+            Built by a Microsoft engineer · Free forever · 30 architectures
           </p>
 
           {/* Social proof */}

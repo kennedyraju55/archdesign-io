@@ -11,8 +11,8 @@ const steps = [
   {
     icon: Video,
     number: "02",
-    title: "Subscribe for Video Walkthroughs",
-    description: "Subscribe for $9/month to get weekly video walkthroughs. Each video is a 20–40 min deep-dive with live diagram annotation and Q&A-style explanations.",
+    title: "Video Walkthroughs — Coming Soon",
+    description: "Video walkthroughs are coming soon — free 40-minute deep-dives with live diagram annotation and Q&A-style explanations.",
     color: "var(--accent-blue)",
   },
   {

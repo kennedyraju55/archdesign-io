@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+﻿import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import {
@@ -120,6 +120,7 @@ export default async function ArchitectureDetailPage({
 
   const accentBorder = categoryAccents[arch.category];
   const accentText = categoryTextAccents[arch.category];
+  const accentBg = arch.category === "LLM & AI Systems" ? "bg-purple-500/10" : arch.category === "Data & Infrastructure" ? "bg-cyan-500/10" : "bg-blue-500/10";
   const heroGradient = categoryGradients[arch.category];
 
   return (
@@ -203,6 +204,79 @@ export default async function ArchitectureDetailPage({
           </p>
         </section>
 
+        {/* ── Problem ──────────────────────────────────────────────── */}
+        {arch.problem && (
+          <section>
+            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+              <span className="text-red-400">⚠</span>
+              The Problem
+            </h2>
+            <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-5">
+              <p className="text-[var(--text-secondary)] leading-relaxed text-base">{arch.problem}</p>
+            </div>
+          </section>
+        )}
+
+        {/* ── Solution ─────────────────────────────────────────────── */}
+        {arch.solution && (
+          <section>
+            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+              <span className="text-emerald-400">✓</span>
+              The Solution
+            </h2>
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5">
+              <p className="text-[var(--text-secondary)] leading-relaxed text-base">{arch.solution}</p>
+            </div>
+          </section>
+        )}
+
+        {/* ── Scaling Numbers ──────────────────────────────────────── */}
+        {arch.scalingNumbers && arch.scalingNumbers.length > 0 && (
+          <section>
+            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5 flex items-center gap-2">
+              <span className={accentText}>📊</span>
+              Scale at a Glance
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {arch.scalingNumbers.map((n) => (
+                <div key={n.label} className="arch-card p-5 text-center">
+                  <p className={`text-2xl sm:text-3xl font-extrabold ${accentText} mb-1`}>{n.value}</p>
+                  <p className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wider">{n.label}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ── Deep Dive ────────────────────────────────────────────── */}
+        {arch.deepDive && arch.deepDive.length > 0 && (
+          <section>
+            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6 flex items-center gap-2">
+              <span className={accentText}>🔬</span>
+              Deep Dive
+            </h2>
+            <div className="space-y-6">
+              {arch.deepDive.map((section, i) => (
+                <div key={i} className="arch-card p-6">
+                  <div className="flex items-start gap-4">
+                    <span className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${accentBg} ${accentText} border ${accentBorder}`}>
+                      {i + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] mb-3 leading-snug">
+                        {section.heading}
+                      </h3>
+                      <p className="text-[var(--text-secondary)] leading-relaxed text-sm sm:text-base">
+                        {section.body}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* ── Diagram ──────────────────────────────────────────────── */}
         <section>
           <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5 flex items-center gap-2">
@@ -245,12 +319,74 @@ export default async function ArchitectureDetailPage({
           </div>
         </section>
 
+        {/* ── Tradeoffs ────────────────────────────────────────────── */}
+        {arch.tradeoffs && (
+          <section>
+            <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5 flex items-center gap-2">
+              <span className={accentText}>⚖</span>
+              Tradeoffs & Design Decisions
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-5">
+                <p className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3">✓ Strengths</p>
+                <ul className="space-y-2.5">
+                  {arch.tradeoffs.pros.map((p) => (
+                    <li key={p} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
+                      <span className="text-emerald-400 shrink-0 mt-0.5 font-bold">✓</span>
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-xl border border-red-500/25 bg-red-500/5 p-5">
+                <p className="text-xs font-bold uppercase tracking-widest text-red-400 mb-3">✗ Weaknesses</p>
+                <ul className="space-y-2.5">
+                  {arch.tradeoffs.cons.map((c) => (
+                    <li key={c} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
+                      <span className="text-red-400 shrink-0 mt-0.5 font-bold">✗</span>
+                      {c}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Interview Prep ───────────────────────────────────────── */}
+        {arch.interviewQuestions && arch.interviewQuestions.length > 0 && (
+          <section>
+            <div className="flex items-center gap-3 mb-5">
+              <h2 className="text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <span className="text-yellow-400">🎯</span>
+                FAANG Interview Questions
+              </h2>
+              <span className="badge badge-purple">Interview Prep</span>
+            </div>
+            <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-6">
+              <p className="text-xs text-[var(--text-muted)] mb-4 italic">
+                These are real system design interview questions asked at Google, Meta, Amazon, Apple, Netflix, and Microsoft. Study the architecture above before attempting.
+              </p>
+              <ol className="space-y-4">
+                {arch.interviewQuestions.map((q, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="shrink-0 w-7 h-7 rounded-lg bg-yellow-500/15 border border-yellow-500/30 text-yellow-400 text-xs font-bold flex items-center justify-center mt-0.5">
+                      Q{i + 1}
+                    </span>
+                    <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">{q}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+        )}
+
         {/* ── Research Papers ──────────────────────────────────────── */}
         {arch.papers.length > 0 && (
           <section>
             <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5 flex items-center gap-2">
               <BookOpen className={`w-5 h-5 ${accentText}`} />
-              Research Papers
+              Research Papers & Further Reading
             </h2>
             <div className="space-y-3">
               {arch.papers.map((paper) => (
@@ -287,84 +423,50 @@ export default async function ArchitectureDetailPage({
           </section>
         )}
 
-        {/* ── Subscriber Exclusive (Locked) ────────────────────────── */}
+        {/* ── Video Coming Soon ─────────────────────────────────────── */}
         <section>
           <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5 flex items-center gap-2">
             <Play className="w-5 h-5 text-amber-400" />
             Video Walkthrough
           </h2>
-
-          <div className="relative rounded-2xl border border-amber-500/30 overflow-hidden" style={{ boxShadow: '0 0 40px rgba(245,158,11,0.06)' }}>
-            {/* Blurred fake content */}
-            <div className="select-none pointer-events-none" aria-hidden>
-              <div className="bg-[var(--bg-card)] p-6 space-y-3 blur-[4px] opacity-40">
-                <div className="h-4 w-2/3 rounded bg-[var(--border)]" />
-                <div className="h-4 w-full rounded bg-[var(--border)]" />
-                <div className="h-4 w-5/6 rounded bg-[var(--border)]" />
-                <div className="h-36 rounded-xl bg-[var(--bg-primary)] flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-500/30" />
-                </div>
-                <div className="h-4 w-3/4 rounded bg-[var(--border)]" />
-                <div className="h-4 w-1/2 rounded bg-[var(--border)]" />
+          <div className="relative rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-orange-500/5 p-8 text-center overflow-hidden">
+            <div className="absolute inset-0 grid-bg opacity-10 pointer-events-none" />
+            <div className="relative">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-widest mb-5">
+                🎬 Coming Soon
               </div>
-            </div>
-
-            {/* Lock overlay */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--bg-primary)]/85 backdrop-blur-sm p-6 sm:p-10">
-              <div className="max-w-lg w-full text-center space-y-4">
-                {/* Coming soon badge */}
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm font-bold uppercase tracking-widest">
-                  🚀 Launching Soon
-                </div>
-
-                <h3 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)]">
-                  🎬 Video Deep-Dive Coming
-                </h3>
-                <p className="text-[var(--text-secondary)] text-sm leading-relaxed max-w-sm mx-auto">
-                  A 40-min walkthrough of this exact architecture — with live diagram annotation, FAANG interview Q&A, and real capacity numbers. 
-                  <strong className="text-amber-300"> Dropping soon for subscribers.</strong>
-                </p>
-
-                {/* What's inside */}
-                <ul className="text-left space-y-2 max-w-xs mx-auto">
-                  {[
-                    "Step-by-step design with annotated diagrams",
-                    "FAANG Q&A — traps, answers & follow-ups",
-                    "Failure modes & real production war stories",
-                    "Back-of-envelope capacity estimation",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
-                      <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Early bird CTA */}
-                <div className="pt-2 space-y-2">
-                  <Link
-                    href="/subscribe"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-black hover:opacity-90 transition shadow-lg"
-                    style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)', boxShadow: '0 8px 24px rgba(245,158,11,0.25)' }}
-                  >
-                    <Zap className="w-4 h-4" />
-                    Reserve Early-Bird Spot — $5/mo
-                  </Link>
-                  <p className="text-xs text-[var(--text-muted)]">
-                    No charge now · First 300 subscribers lock in this price forever
-                  </p>
-                </div>
-              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] mb-3">
+                40-Minute Video Deep-Dive
+              </h3>
+              <p className="text-[var(--text-secondary)] text-sm leading-relaxed max-w-md mx-auto mb-5">
+                A full walkthrough of this architecture with live diagram annotation, capacity estimation worked examples, and FAANG interview Q&A — explained by a practising Microsoft engineer.
+              </p>
+              <ul className="flex flex-col sm:flex-row gap-3 justify-center text-sm text-[var(--text-secondary)] mb-6">
+                {["Live diagram annotation", "Capacity estimation walkthrough", "Production war stories", "FAANG Q&A with model answers"].map(f => (
+                  <li key={f} className="flex items-center gap-1.5 justify-center">
+                    <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />{f}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/coming-soon"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-black hover:opacity-90 transition shadow-lg"
+                style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)', boxShadow: '0 8px 24px rgba(245,158,11,0.25)' }}
+              >
+                <Zap className="w-4 h-4" />
+                Get Notified When Live
+              </Link>
+              <p className="text-xs text-[var(--text-muted)] mt-2">Free to watch  No account required  Dropping soon</p>
             </div>
           </div>
         </section>
 
-        {/* ── Related Architectures ────────────────────────────────── */}
+        {/*  Related Architectures  */}
         {related.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
-                <span className={accentText}>◈</span>
+                <span className={accentText}></span>
                 More {arch.category}
               </h2>
               <Link
@@ -382,29 +484,28 @@ export default async function ArchitectureDetailPage({
           </section>
         )}
 
-        {/* ── Bottom CTA ───────────────────────────────────────────── */}
+        {/*  Bottom CTA ─ */}
         <section className="rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--bg-secondary)] to-[var(--bg-card)] p-8 sm:p-10 text-center relative overflow-hidden">
           <div className="absolute inset-0 grid-bg opacity-20 pointer-events-none" />
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-64 h-64 bg-blue-600/10 rounded-full blur-[60px] pointer-events-none" />
-
           <div className="relative">
             <div className="inline-flex items-center gap-2 badge badge-purple mb-5">
-              🎬 30 Videos Total
+               30 Video Deep-Dives  Coming Soon
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-3">
               Master every architecture with{" "}
-              <span className="gradient-text-warm">video deep-dives</span>
+              <span className="gradient-text-warm">video walkthroughs</span>
             </h2>
             <p className="text-[var(--text-secondary)] mb-7 max-w-xl mx-auto">
-              One video per architecture. New release every week. FAANG interview prep, step-by-step walkthroughs, and production tradeoffs explained visually.
+              One video per architecture. FAANG interview prep, live diagram walkthroughs, and production tradeoffs  explained by a Microsoft engineer.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
-                href="/subscribe"
+                href="/coming-soon"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-blue-600/30"
               >
                 <Play className="w-4 h-4" />
-                Subscribe — $5/mo
+                Get Notified
               </Link>
               <Link
                 href="/architectures"
@@ -413,7 +514,7 @@ export default async function ArchitectureDetailPage({
                 Browse all 30 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-            <p className="mt-4 text-xs text-[var(--text-muted)]">Cancel anytime · No DRM · Watch at your own pace</p>
+            <p className="mt-4 text-xs text-[var(--text-muted)]">All architecture articles are free  No account needed</p>
           </div>
         </section>
 

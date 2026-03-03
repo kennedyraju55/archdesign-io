@@ -12,7 +12,7 @@ const rows: ComparisonRow[] = [
     feature: "Price",
     bytebyteGo: { value: "$15/mo", positive: false },
     designGurus: { value: "$29/mo", positive: false },
-    archDesign: { value: "$5/mo", positive: true },
+    archDesign: { value: "Free", positive: true },
   },
   {
     feature: "LLM Architectures",

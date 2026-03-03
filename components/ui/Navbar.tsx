@@ -30,23 +30,17 @@ export default function Navbar() {
             <Link href="/#how-it-works" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
               How it Works
             </Link>
-            <Link href="/#pricing" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
-              Pricing
-            </Link>
           </div>
 
           {/* CTA */}
           <div className="hidden md:flex items-center gap-3">
-            <div className="flex flex-col items-center">
-              <Link
-                href="/subscribe"
-                className="px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity text-black"
-                style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}
-              >
-                🚀 Coming Soon — Join Waitlist
-              </Link>
-              <span className="text-[10px] text-amber-500/70 mt-0.5">Early-bird: $5/mo · 300 spots only</span>
-            </div>
+            <Link
+              href="/coming-soon"
+              className="px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity text-black"
+              style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}
+            >
+              🔔 Get Notified
+            </Link>
           </div>
 
           {/* Mobile menu toggle */}
@@ -70,15 +64,12 @@ export default function Navbar() {
             <Link href="/#how-it-works" className="block text-sm text-[var(--text-secondary)] hover:text-white py-2" onClick={() => setOpen(false)}>
               How it Works
             </Link>
-            <Link href="/#pricing" className="block text-sm text-[var(--text-secondary)] hover:text-white py-2" onClick={() => setOpen(false)}>
-              Pricing
-            </Link>
             <Link
-              href="/subscribe"
+              href="/coming-soon"
               className="block w-full text-center px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-sm font-semibold"
               onClick={() => setOpen(false)}
             >
-              Subscribe — $5/mo
+              🔔 Get Notified
             </Link>
           </div>
         </div>
