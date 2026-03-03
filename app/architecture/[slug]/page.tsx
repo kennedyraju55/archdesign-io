@@ -290,62 +290,70 @@ export default async function ArchitectureDetailPage({
         {/* ── Subscriber Exclusive (Locked) ────────────────────────── */}
         <section>
           <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5 flex items-center gap-2">
-            <Play className="w-5 h-5 text-purple-400" />
+            <Play className="w-5 h-5 text-amber-400" />
             Video Walkthrough
           </h2>
 
-          <div className="relative rounded-2xl border border-[var(--border)] overflow-hidden">
-            {/* Blurred preview content */}
+          <div className="relative rounded-2xl border border-amber-500/30 overflow-hidden" style={{ boxShadow: '0 0 40px rgba(245,158,11,0.06)' }}>
+            {/* Blurred fake content */}
             <div className="select-none pointer-events-none" aria-hidden>
-              <div className="bg-[var(--bg-card)] p-6 space-y-3 blur-[3px] opacity-50">
+              <div className="bg-[var(--bg-card)] p-6 space-y-3 blur-[4px] opacity-40">
                 <div className="h-4 w-2/3 rounded bg-[var(--border)]" />
                 <div className="h-4 w-full rounded bg-[var(--border)]" />
                 <div className="h-4 w-5/6 rounded bg-[var(--border)]" />
-                <div className="h-32 rounded-xl bg-[var(--bg-primary)]" />
+                <div className="h-36 rounded-xl bg-[var(--bg-primary)] flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-500/30" />
+                </div>
                 <div className="h-4 w-3/4 rounded bg-[var(--border)]" />
                 <div className="h-4 w-1/2 rounded bg-[var(--border)]" />
               </div>
             </div>
 
             {/* Lock overlay */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--bg-primary)]/80 backdrop-blur-sm p-6 sm:p-10">
-              <div className="max-w-lg w-full text-center space-y-5">
-                {/* Lock badge */}
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-sm font-semibold">
-                  <Lock className="w-4 h-4" />
-                  Subscriber Exclusive
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--bg-primary)]/85 backdrop-blur-sm p-6 sm:p-10">
+              <div className="max-w-lg w-full text-center space-y-4">
+                {/* Coming soon badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm font-bold uppercase tracking-widest">
+                  🚀 Launching Soon
                 </div>
 
                 <h3 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)]">
-                  🎬 Video Walkthrough
+                  🎬 Video Deep-Dive Coming
                 </h3>
-                <p className="text-[var(--text-secondary)] text-sm leading-relaxed">
-                  20–40 min deep-dive with live diagram annotation — exactly how you&apos;d explain this in a FAANG system design interview.
+                <p className="text-[var(--text-secondary)] text-sm leading-relaxed max-w-sm mx-auto">
+                  A 40-min walkthrough of this exact architecture — with live diagram annotation, FAANG interview Q&A, and real capacity numbers. 
+                  <strong className="text-amber-300"> Dropping soon for subscribers.</strong>
                 </p>
 
                 {/* What's inside */}
-                <ul className="text-left space-y-2 max-w-sm mx-auto">
+                <ul className="text-left space-y-2 max-w-xs mx-auto">
                   {[
-                    "Step-by-step design walkthrough with live diagrams",
-                    "FAANG interview Q&A — common traps & how to answer",
-                    "Failure modes & how production systems handle them",
-                    "Capacity estimation with real numbers",
+                    "Step-by-step design with annotated diagrams",
+                    "FAANG Q&A — traps, answers & follow-ups",
+                    "Failure modes & real production war stories",
+                    "Back-of-envelope capacity estimation",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
-                      <CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                       {item}
                     </li>
                   ))}
                 </ul>
 
-                <Link
-                  href="/subscribe"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-purple-600/30"
-                >
-                  <Play className="w-4 h-4" />
-                  Unlock Video — Subscribe $5/mo
-                </Link>
-                <p className="text-xs text-[var(--text-muted)]">Cancel anytime · Includes all 30 architecture videos</p>
+                {/* Early bird CTA */}
+                <div className="pt-2 space-y-2">
+                  <Link
+                    href="/subscribe"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-black hover:opacity-90 transition shadow-lg"
+                    style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)', boxShadow: '0 8px 24px rgba(245,158,11,0.25)' }}
+                  >
+                    <Zap className="w-4 h-4" />
+                    Reserve Early-Bird Spot — $5/mo
+                  </Link>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    No charge now · First 300 subscribers lock in this price forever
+                  </p>
+                </div>
               </div>
             </div>
           </div>

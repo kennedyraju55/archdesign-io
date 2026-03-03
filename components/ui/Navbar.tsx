@@ -40,11 +40,12 @@ export default function Navbar() {
             <div className="flex flex-col items-center">
               <Link
                 href="/subscribe"
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-sm font-semibold hover:opacity-90 transition-opacity glow-blue"
+                className="px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity text-black"
+                style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}
               >
-                Subscribe — $5/mo
+                🚀 Coming Soon — Join Waitlist
               </Link>
-              <span className="text-[10px] text-[var(--text-muted)] mt-0.5">3× cheaper than ByteByteGo</span>
+              <span className="text-[10px] text-amber-500/70 mt-0.5">Early-bird: $5/mo · 300 spots only</span>
             </div>
           </div>
 
