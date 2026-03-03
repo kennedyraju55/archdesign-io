@@ -14,7 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 import ArchDiagram from "@/components/architecture/ArchDiagram";
-import MermaidDiagram from "@/components/architecture/MermaidDiagram";
+import MermaidDiagram from "@/components/architecture/MermaidDiagramClient";
 import ArchCard from "@/components/architecture/ArchCard";
 import {
   architectures,
