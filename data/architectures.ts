@@ -27,12 +27,12 @@ export interface Architecture {
   papers: ResearchPaper[];
   diagramType: string;
   videoWeek: number;
-  problem?: string;
-  solution?: string;
-  deepDive?: DeepDiveSection[];
-  tradeoffs?: { pros: string[]; cons: string[] };
-  interviewQuestions?: (string | { question: string; hint: string })[];
-  scalingNumbers?: { label: string; value: string }[];
+  problem: string;
+  solution: string;
+  deepDive: DeepDiveSection[];
+  tradeoffs: { pros: string[]; cons: string[] };
+  interviewQuestions: string[];
+  scalingNumbers: { label: string; value: string }[];
   mermaidDef?: string;
   howItWorks?: string;
 }
@@ -56,8 +56,30 @@ export const architectures: Architecture[] = [
       { title: "Netflix's Globally Distributed CDN", authors: "Netflix Tech Blog", year: 2016, url: "https://netflixtechblog.com/netflix-and-fill-c43a32b490c0" },
     ],
     diagramType: "cdn",
+    mermaidDef: `graph LR
+  subgraph Client
+    U[User Device]
+    DP[DASH Player]
+  end
+  subgraph DNS Layer
+    DNS[Netflix DNS]
+    AC[Anycast Routing]
+  end
+  subgraph ISP PoP
+    OCA[OCA Cache]
+  end
+  subgraph AWS Origin
+    S3[S3 Storage]
+  end
+  U --> DNS --> AC --> OCA
+  OCA -->|Cache Hit| DP
+  OCA -->|Cache Miss| S3 --> OCA
+  style OCA fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style S3 fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style DP fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: "① User presses play → ② Netflix DNS resolves nearest ISP PoP → ③ OCA checks local cache → ④ Cache miss fetches chunk from S3 origin → ⑤ OCA caches chunk for future requests → ⑥ DASH player adapts bitrate based on bandwidth",
     videoWeek: 1,
-    problem: "Netflix needs to stream 4K video to 260 million subscribers across 190 countries simultaneously. A centralized datacenter would mean every byte travels thousands of miles, causing buffering and astronomical egress costs. At peak, Netflix represents 15% of all global internet traffic — impossible to serve from one place.",
+    problem: "Netflix needs to stream 4K videoto 260 million subscribers across 190 countries simultaneously. A centralized datacenter would mean every byte travels thousands of miles, causing buffering and astronomical egress costs. At peak, Netflix represents 15% of all global internet traffic — impossible to serve from one place.",
     solution: "Netflix built Open Connect — a purpose-built CDN with 17,000+ appliances physically inside ISP networks. ISPs get free hardware; Netflix eliminates egress fees. 95% of all traffic is served from ISP-embedded caches without touching the internet backbone.",
     deepDive: [
       { heading: "Open Connect Appliances — Netflix's Own CDN Hardware", body: "Unlike companies relying on Akamai or Cloudfront, Netflix designs and deploys its own CDN hardware called Open Connect Appliances (OCAs). These are high-density servers with up to 1 petabyte of storage, placed physically inside ISP datacenters worldwide. Netflix offers them to ISPs for free — ISPs save on peering costs because Netflix traffic stays local, and Netflix pays zero egress fees to transit providers. The OCA runs a custom FreeBSD-based OS optimized for high-throughput file serving." },
@@ -101,6 +123,31 @@ export const architectures: Architecture[] = [
       { title: "Scaling Twitter's Ad Targeting Platform", authors: "Twitter Engineering", year: 2018 },
     ],
     diagramType: "fanout",
+    mermaidDef: `graph LR
+  subgraph Ingestion
+    U[User Posts Tweet]
+    TW[Tweets Table]
+    K[Kafka]
+  end
+  subgraph Fan-Out
+    FO[Fan-Out Service]
+    FL[FlockDB Followers]
+  end
+  subgraph Timeline Store
+    RC[Redis Timeline Cache]
+    RS[Redis Sorted Set]
+  end
+  subgraph Celebrity Path
+    CP[Pull on Read]
+  end
+  U --> TW --> K --> FO
+  FO --> FL
+  FO -->|Normal Users| RC --> RS
+  FO -->|Celebrities| CP --> RS
+  style FO fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style RC fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style K fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: "① User posts tweet → ② Write to Tweets table and Kafka event → ③ Fan-out service reads follower list → ④ Normal users: push tweet ID to Redis timeline → ⑤ Celebrities: skip push, pull on read → ⑥ Client reads timeline from Redis sorted set",
     videoWeek: 1,
     problem: "When a user opens their home timeline, they expect a real-time feed of tweets from everyone they follow, sorted chronologically. The naive approach — querying all followed users' tweets at read time — requires joining millions of rows per request, which at 300K+ timeline reads per second brings any database to its knees. The challenge is compounded by celebrity accounts like Katy Perry with 100M+ followers: a single tweet must appear in 100M timelines within seconds.",
     solution: "Twitter uses a hybrid fan-out model. For regular users (fewer than ~500K followers), tweets are pushed at write time into each follower's precomputed timeline stored in Redis sorted sets. For celebrity accounts, tweets are fetched at read time and merged with the precomputed timeline on the fly. This hybrid approach bounds worst-case write amplification while keeping reads consistently fast at sub-5ms.",
@@ -146,8 +193,31 @@ export const architectures: Architecture[] = [
       { title: "H3: Uber's Hexagonal Hierarchical Spatial Index", authors: "Brodsky, I. (Uber)", year: 2018, url: "https://eng.uber.com/h3/" },
     ],
     diagramType: "geo",
+    mermaidDef: `graph LR
+  subgraph Driver
+    DA[Driver App GPS]
+  end
+  subgraph Stream
+    K[Kafka Stream]
+  end
+  subgraph Geo Index
+    H3[H3 Hex Indexer]
+    SD[Supply/Demand Counter]
+  end
+  subgraph Pricing
+    ML[Surge ML Model]
+    PM[Price Multiplier]
+  end
+  subgraph Rider
+    RA[Rider App]
+  end
+  DA --> K --> H3 --> SD --> ML --> PM --> RA
+  style H3 fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style ML fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style K fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: "① Driver app sends GPS every 4s → ② Kafka ingests location stream → ③ H3 maps GPS to hexagonal cell → ④ Supply/demand counted per cell → ⑤ Surge ML model computes price multiplier → ⑥ Price shown to rider for acceptance",
     videoWeek: 2,
-    problem: "Uber must match millions of riders with nearby drivers in real-time across 70+ countries with sub-second latency. Traditional geospatial approaches using rectangular bounding boxes produce uneven cell sizes and inconsistent neighbor distances. Pricing must respond instantly to hyper-local supply/demand imbalances — a concert ending in one neighborhood shouldn't spike prices three blocks away. The dispatch system must solve a bipartite matching problem in under 100ms.",
+    problem: "Uber must match millions of riderswith nearby drivers in real-time across 70+ countries with sub-second latency. Traditional geospatial approaches using rectangular bounding boxes produce uneven cell sizes and inconsistent neighbor distances. Pricing must respond instantly to hyper-local supply/demand imbalances — a concert ending in one neighborhood shouldn't spike prices three blocks away. The dispatch system must solve a bipartite matching problem in under 100ms.",
     solution: "Uber developed H3, a hexagonal hierarchical spatial index that divides Earth into hexagonal cells at 16 resolution levels. Hexagons have the unique property that all neighbors are equidistant, making proximity calculations uniform. Driver GPS updates stream through Kafka into an H3-indexed geospatial store, and a dispatch service (DISCO) combines ETA estimation, per-cell supply/demand ratios, and driver state to assign rides optimally.",
     scalingNumbers: [
       { label: "Trips/Day", value: "25M+" },
@@ -189,8 +259,34 @@ export const architectures: Architecture[] = [
     concepts: ["Erlang/BEAM", "Mnesia DB", "XMPP Protocol", "ACK Chains", "Store-and-Forward", "FreeBSD Tuning"],
     papers: [],
     diagramType: "messaging",
+    mermaidDef: `graph LR
+  subgraph Sender
+    SC[Sender Client]
+    SE[Signal Encrypt]
+  end
+  subgraph Server
+    ES[Erlang Server]
+    MN[Mnesia DB]
+    MQ[Message Queue]
+  end
+  subgraph Delivery
+    OC[Online Check]
+    PS[Push to Recipient]
+    ST[Store for Retry]
+  end
+  subgraph Recipient
+    RC[Recipient Client]
+  end
+  SC --> SE --> ES --> OC
+  OC -->|Online| PS --> RC
+  OC -->|Offline| ST --> MN
+  ES --> MQ
+  style ES fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style MN fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style SE fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: "① Sender encrypts with Signal Protocol → ② TCP sends to Erlang server → ③ Server checks recipient online status → ④ Online: deliver immediately with receipt → ⑤ Offline: store in Mnesia with retry backoff → ⑥ Recipient decrypts message locally",
     videoWeek: 2,
-    problem: "WhatsApp needed to support 2 billion users exchanging 100 billion messages per day with extreme reliability — yet the engineering team numbered only ~50 people. Traditional Java/Python web stacks would require thousands of servers, complex orchestration, and large ops teams. Messages must be delivered reliably even when recipients are offline for days, and end-to-end encryption means the server must never be able to read message content.",
+    problem: "WhatsApp needed to support 2 billion usersexchanging 100 billion messages per day with extreme reliability — yet the engineering team numbered only ~50 people. Traditional Java/Python web stacks would require thousands of servers, complex orchestration, and large ops teams. Messages must be delivered reliably even when recipients are offline for days, and end-to-end encryption means the server must never be able to read message content.",
     solution: "WhatsApp chose Erlang/OTP, a platform designed for telecom systems requiring nine-nines reliability (99.9999999% uptime). Each user connection maps to a lightweight Erlang process consuming only ~2KB of memory, enabling a single server to hold 2M+ concurrent connections. Messages follow a store-and-forward pattern with delivery acknowledgment chains. FreeBSD kernel tuning pushed per-server connection limits far beyond typical Linux defaults.",
     scalingNumbers: [
       { label: "Messages/Day", value: "100B+" },
@@ -235,8 +331,31 @@ export const architectures: Architecture[] = [
       { title: "MapReduce: Simplified Data Processing on Large Clusters", authors: "Dean, J. & Ghemawat, S. (Google)", year: 2004, url: "https://static.googleusercontent.com/media/research.google.com/en//archive/mapreduce-osdi04.pdf" },
     ],
     diagramType: "search",
+    mermaidDef: `graph LR
+  subgraph Crawl
+    GB[Googlebot]
+    CF[Crawl Frontier]
+  end
+  subgraph Processing
+    CP[Content Parser]
+    CAF[Caffeine Pipeline]
+  end
+  subgraph Index
+    II[Inverted Index Shards]
+    PR[PageRank Scorer]
+  end
+  subgraph Serving
+    QP[Query Processor]
+    RR[Ranked Results]
+  end
+  GB --> CF --> CP --> CAF --> II
+  II --> PR --> QP --> RR
+  style II fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style CAF fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style PR fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: "① Googlebot fetches URL respecting robots.txt → ② HTML parsed, links queued for crawl → ③ Caffeine indexes content in near real-time → ④ Terms stored in inverted index shards → ⑤ PageRank computed via graph algorithm → ⑥ Query hits shards in parallel, top-10 returned",
     videoWeek: 3,
-    problem: "Google must index hundreds of billions of web pages and serve 8.5 billion search queries per day, each returning relevant results in under 200ms. The web is constantly changing — new pages appear, old pages are modified, and spam sites try to game rankings. Building a full index from scratch via MapReduce takes days, but users expect freshness within minutes. The system must handle queries across thousands of machines in parallel while maintaining global consistency.",
+    problem: "Google must index hundreds of billionsof web pages and serve 8.5 billion search queries per day, each returning relevant results in under 200ms. The web is constantly changing — new pages appear, old pages are modified, and spam sites try to game rankings. Building a full index from scratch via MapReduce takes days, but users expect freshness within minutes. The system must handle queries across thousands of machines in parallel while maintaining global consistency.",
     solution: "Google's pipeline chains multiple purpose-built systems: Googlebot crawls the web following a priority-based frontier → Bigtable stores raw page content → MapReduce/Caffeine builds the inverted index → Percolator provides real-time incremental index updates within minutes → Spanner gives globally-consistent metadata storage → the serving layer fans out each query to thousands of index shards in parallel, merges results, and returns in under 200ms.",
     scalingNumbers: [
       { label: "Queries/Day", value: "8.5B+" },
@@ -280,8 +399,28 @@ export const architectures: Architecture[] = [
       { title: "Dynamo: Amazon's Highly Available Key-value Store", authors: "DeCandia, G. et al. (Amazon)", year: 2007, url: "https://dl.acm.org/doi/10.1145/1294261.1294281" },
     ],
     diagramType: "dynamo",
+    mermaidDef: `graph LR
+  Client([Client]) --> RR[Request Router]
+  RR --> CHR{Consistent Hash Ring}
+  CHR --> VN1[Virtual Node A]
+  CHR --> VN2[Virtual Node B]
+  VN1 --> Primary[(Primary Node)]
+  Primary --> R1[(Replica 1)]
+  Primary --> R2[(Replica 2)]
+  R1 --> Resp[Quorum Response W=2]
+  R2 --> Resp
+  Resp --> Client
+  subgraph Storage
+    Primary
+    R1
+    R2
+  end
+  style Primary fill:#f96,stroke:#333
+  style CHR fill:#6cf,stroke:#333
+  style RR fill:#fc6,stroke:#333`,
+    howItWorks: "① Client sends write with partition key → ② Router hashes key via MD5 to find ring position → ③ Request lands on responsible virtual node → ④ Node writes to WAL and memtable → ⑤ Replicates to two replicas with quorum W=2 → ⑥ Acknowledges write to client",
     videoWeek: 3,
-    problem: "Amazon's holiday shopping season 2004 exposed a critical weakness: their relational databases couldn't scale to handle peak cart and checkout traffic without costly vertical scaling. The system needed to be always-writable — an unavailable shopping cart directly costs revenue. Traditional RDBMS systems sacrifice availability during network partitions, which is unacceptable for Amazon's core commerce operations.",
+    problem: "Amazon's holiday shopping season 2004exposed a critical weakness: their relational databases couldn't scale to handle peak cart and checkout traffic without costly vertical scaling. The system needed to be always-writable — an unavailable shopping cart directly costs revenue. Traditional RDBMS systems sacrifice availability during network partitions, which is unacceptable for Amazon's core commerce operations.",
     solution: "Amazon built Dynamo, a fully distributed key-value store using consistent hashing with virtual nodes for data partitioning, sloppy quorum for tunable consistency, vector clocks for conflict detection, gossip protocol for failure detection, and Merkle trees for anti-entropy repair. The 2007 Dynamo paper became one of the most influential distributed systems papers ever, directly inspiring Cassandra, Riak, and Voldemort.",
     scalingNumbers: [
       { label: "Requests/sec", value: "Millions" },
@@ -323,8 +462,34 @@ export const architectures: Architecture[] = [
     concepts: ["Blob Storage", "Transcoding Pipeline", "CDN Distribution", "Content ID Fingerprinting", "Adaptive Bitrate", "Distributed Task Queue"],
     papers: [],
     diagramType: "pipeline",
+    mermaidDef: `graph LR
+  Upload([Creator Upload]) --> GCS[(GCS Raw Storage)]
+  GCS --> Sched[Borg Job Scheduler]
+  Sched --> T1[Transcode 360p]
+  Sched --> T2[Transcode 720p]
+  Sched --> T3[Transcode 1080p]
+  Sched --> T4[Transcode 4K]
+  T1 --> Out[(GCS Output)]
+  T2 --> Out
+  T3 --> Out
+  T4 --> Out
+  Out --> Thumb[Thumbnail Generator]
+  Out --> Meta[Metadata to Spanner]
+  Thumb --> CDN[CDN Edge Cache]
+  Meta --> CDN
+  CDN --> Viewer([Viewer])
+  subgraph Parallel Transcoding
+    T1
+    T2
+    T3
+    T4
+  end
+  style Sched fill:#f96,stroke:#333
+  style CDN fill:#6cf,stroke:#333
+  style GCS fill:#fc6,stroke:#333`,
+    howItWorks: "① Creator uploads raw video to GCS → ② Upload service triggers Borg job scheduler → ③ DAG of transcoding jobs runs in parallel → ④ Each job outputs rendition to GCS → ⑤ Thumbnail extractor picks best frame → ⑥ CDN pre-warms and viewer streams adaptively",
     videoWeek: 4,
-    problem: "500 hours of video are uploaded to YouTube every single minute, in wildly different formats, resolutions, and codecs. Each upload must be transcoded into 8+ resolution/bitrate combinations (144p to 4K HDR), thumbnails must be generated, copyright must be checked against millions of reference files, and the video must be globally available on the CDN — all within minutes. A sequential pipeline would take hours per video; users expect their upload to be watchable almost immediately.",
+    problem: "500 hours of video are uploadedto YouTube every single minute, in wildly different formats, resolutions, and codecs. Each upload must be transcoded into 8+ resolution/bitrate combinations (144p to 4K HDR), thumbnails must be generated, copyright must be checked against millions of reference files, and the video must be globally available on the CDN — all within minutes. A sequential pipeline would take hours per video; users expect their upload to be watchable almost immediately.",
     solution: "YouTube's processing pipeline is massively parallel. Uploaded files are chunked into segments, and each segment is independently transcoded across a distributed worker fleet using a DAG-based task scheduler. Content ID fingerprinting runs in parallel with transcoding. Completed renditions are incrementally pushed to CDN edge caches before the full pipeline finishes. The result: a 10-minute video goes from upload to globally streamable in under 5 minutes.",
     scalingNumbers: [
       { label: "Upload Rate", value: "500 hrs/min" },
@@ -368,8 +533,29 @@ export const architectures: Architecture[] = [
       { title: "Applying Deep Learning To Airbnb Search", authors: "Haldar, M. et al. (Airbnb)", year: 2019, url: "https://arxiv.org/abs/1912.08081" },
     ],
     diagramType: "search",
+    mermaidDef: `graph LR
+  Guest([Guest Search]) --> SS[Search Service]
+  SS --> ES[(Elasticsearch Geo+Filters)]
+  ES --> Avail[Availability Service]
+  Avail --> CalDB[(Calendar DB)]
+  Avail --> Price[Price ML Model]
+  Price --> Rank[Ranking Engine]
+  Rank --> Results([Top 20 Results])
+  CalDB --> Avail
+  subgraph ML Pipeline
+    Price
+    Rank
+  end
+  subgraph Data Layer
+    ES
+    CalDB
+  end
+  style ES fill:#f96,stroke:#333
+  style Price fill:#6cf,stroke:#333
+  style Rank fill:#fc6,stroke:#333`,
+    howItWorks: "① Guest enters dates and location → ② Geo query hits Elasticsearch index → ③ Filter by available dates from calendar DB → ④ ML model predicts optimal price → ⑤ Ranking model scores listings by relevance → ⑥ Top 20 results returned to guest",
     videoWeek: 4,
-    problem: "Airbnb must search millions of listings across complex, overlapping constraints: geographic location, date availability, price range, amenities, guest count, and host preferences. Unlike product search, each listing has a unique real-time availability calendar that changes constantly as bookings are made. A stale search result that shows an already-booked listing degrades trust. Ranking must balance relevance, personalization, and business metrics like conversion rate and revenue per search.",
+    problem: "Airbnb must search millions of listingsacross complex, overlapping constraints: geographic location, date availability, price range, amenities, guest count, and host preferences. Unlike product search, each listing has a unique real-time availability calendar that changes constantly as bookings are made. A stale search result that shows an already-booked listing degrades trust. Ranking must balance relevance, personalization, and business metrics like conversion rate and revenue per search.",
     solution: "Airbnb's search stack combines Elasticsearch for geo-spatial candidate retrieval with a multi-stage ML ranking pipeline. The first stage retrieves thousands of candidates using geo_distance and filter queries. A lightweight model prunes candidates, then a heavyweight neural model re-ranks the top results using 1,000+ features from a real-time feature store. Availability is checked against a dedicated calendar service with sub-second consistency, ensuring displayed listings are actually bookable.",
     scalingNumbers: [
       { label: "Active Listings", value: "7M+" },
@@ -411,8 +597,30 @@ export const architectures: Architecture[] = [
     concepts: ["Idempotency Keys", "Event Sourcing", "CQRS", "Distributed Sagas", "Double-Entry Ledger", "Webhook Fan-out"],
     papers: [],
     diagramType: "payment",
+    mermaidDef: `graph LR
+  Merchant([Merchant API Call]) --> Idemp[Idempotency Layer]
+  Idemp --> Vault[(Tokenization Vault)]
+  Vault --> Router[Network Router]
+  Router --> CN{Card Network Visa/MC}
+  CN --> Bank[(Issuing Bank)]
+  Bank --> Auth[Auth Response]
+  Auth --> Settle[Settlement Queue]
+  Settle --> Merchant
+  subgraph Payment Flow
+    Idemp
+    Vault
+    Router
+  end
+  subgraph External
+    CN
+    Bank
+  end
+  style Idemp fill:#f96,stroke:#333
+  style Vault fill:#6cf,stroke:#333
+  style CN fill:#fc6,stroke:#333`,
+    howItWorks: "① Merchant sends charge with idempotency key → ② Stripe checks key to prevent duplicate charges → ③ PAN tokenized and stored in vault → ④ Request routed to card network Visa/Mastercard → ⑤ Issuing bank authorizes via fraud score → ⑥ Settlement batch runs at end of day",
     videoWeek: 5,
-    problem: "Payment processing demands the strongest correctness guarantees in all of software engineering. Charging a credit card twice is catastrophic — it erodes user trust and creates regulatory liability. Network failures, retries, and timeouts are inevitable, yet every payment must execute exactly once. Multi-step payment flows (authorize → capture → settle → payout) span multiple external systems (card networks, banks, fraud services) with different failure modes and latencies.",
+    problem: "Payment processing demands the strongestcorrectness guarantees in all of software engineering. Charging a credit card twice is catastrophic — it erodes user trust and creates regulatory liability. Network failures, retries, and timeouts are inevitable, yet every payment must execute exactly once. Multi-step payment flows (authorize → capture → settle → payout) span multiple external systems (card networks, banks, fraud services) with different failure modes and latencies.",
     solution: "Stripe uses idempotency keys — client-generated UUIDs attached to every mutating API request — to guarantee exactly-once semantics regardless of retries. An immutable event log (event sourcing) records every state transition for auditability. Double-entry bookkeeping ensures every credit has a matching debit. Multi-step payment flows use distributed sagas with compensating transactions instead of traditional distributed transactions, enabling graceful partial failure recovery.",
     scalingNumbers: [
       { label: "API Requests/Day", value: "Billions" },
@@ -456,8 +664,29 @@ export const architectures: Architecture[] = [
       { title: "How Discord Stores Billions of Messages", authors: "Discord Engineering", year: 2023, url: "https://discord.com/blog/how-discord-stores-billions-of-messages" },
     ],
     diagramType: "messaging",
+    mermaidDef: `graph LR
+  Client([Client App]) --> GW[WebSocket Gateway Elixir]
+  GW --> MR[Message Router]
+  MR --> Cass[(Cassandra Messages)]
+  MR --> Cache[(Online Members Cache)]
+  Cache --> Push1[WebSocket Push to Recipients]
+  MR --> PNS[Push Notification Service]
+  Push1 --> Recipients([Online Members])
+  PNS --> Offline([Offline Members])
+  subgraph Gateway Layer
+    GW
+    MR
+  end
+  subgraph Storage
+    Cass
+    Cache
+  end
+  style GW fill:#f96,stroke:#333
+  style MR fill:#6cf,stroke:#333
+  style Cass fill:#fc6,stroke:#333`,
+    howItWorks: "① Client opens persistent WebSocket to Elixir gateway → ② User sends message to channel → ③ Gateway publishes to channel topic → ④ Subscribers receive message via WebSocket push → ⑤ Message persisted to Cassandra by channel and snowflake ID → ⑥ Offline members get push notification",
     videoWeek: 5,
-    problem: "Discord must deliver messages to millions of concurrent users across hundreds of thousands of servers (guilds) in real-time — median latency under 50ms. A single popular server can have 500K+ simultaneous members in a voice or text channel. The original Python/MongoDB stack collapsed under load, and Cassandra's garbage collection pauses caused multi-second latency spikes that made real-time communication impossible.",
+    problem: "Discord must deliver messages to millionsof concurrent users across hundreds of thousands of servers (guilds) in real-time — median latency under 50ms. A single popular server can have 500K+ simultaneous members in a voice or text channel. The original Python/MongoDB stack collapsed under load, and Cassandra's garbage collection pauses caused multi-second latency spikes that made real-time communication impossible.",
     solution: "Discord re-architected in stages: migrated the WebSocket gateway to Elixir (leveraging the BEAM VM's actor model for millions of lightweight concurrent processes), replaced Cassandra with ScyllaDB (a C++ rewrite achieving 10× lower tail latency), and built a custom presence system tracking millions of online users. Each guild maps to Elixir GenServer processes that fan out messages to connected members with microsecond message passing.",
     scalingNumbers: [
       { label: "Concurrent Users", value: "10M+" },
@@ -503,8 +732,22 @@ export const architectures: Architecture[] = [
       { title: "Deep Learning for Audio-based Music Classification and Tagging", authors: "Nam, J. et al.", year: 2018 },
     ],
     diagramType: "ml-pipeline",
+    mermaidDef: `graph LR
+  A[User Plays Track] --> B[Kafka Event Stream]
+  B --> C[Hadoop Cluster]
+  subgraph Offline Pipeline
+    C --> D[BaRT Model Training]
+    D --> E[Candidate Generator]
+  end
+  E --> F[Real-time Feature Store]
+  F --> G[Ranking Model]
+  G --> H[Recommended Tracks]
+  style D fill:#f9a825,stroke:#f57f17
+  style F fill:#26a69a,stroke:#00897b
+  style G fill:#7e57c2,stroke:#512da8`,
+    howItWorks: "① User plays track → ② Stream event to Kafka → ③ Offline pipeline runs BaRT collaborative filtering daily on 600M user histories → ④ Candidate tracks generated per user → ⑤ Real-time ranking model scores candidates using fresh features (time of day, recent listens) → ⑥ Top tracks returned to Discover Weekly",
     videoWeek: 6,
-    problem: "Spotify must recommend music to 600M+ users from a catalog of 100M+ tracks, most of which any individual user has never heard. Traditional collaborative filtering struggles with the cold-start problem — new songs and new users have no interaction history. Users expect personalized discovery (Discover Weekly) that feels serendipitous yet relevant, not just popular-hit echo chambers. The recommendation must blend multiple signals: listening history, playlist curation, social context, and even the raw audio itself.",
+    problem: "Spotify must recommend music to 600M+ usersfrom a catalog of 100M+ tracks, most of which any individual user has never heard. Traditional collaborative filtering struggles with the cold-start problem — new songs and new users have no interaction history. Users expect personalized discovery (Discover Weekly) that feels serendipitous yet relevant, not just popular-hit echo chambers. The recommendation must blend multiple signals: listening history, playlist curation, social context, and even the raw audio itself.",
     solution: "Spotify's recommendation engine combines three complementary approaches: collaborative filtering via matrix factorization (users who listen to X also like Y), NLP models analyzing playlist titles and music blog text to derive semantic track embeddings, and deep audio CNNs that extract features directly from raw audio spectrograms. These signals are combined in a multi-arm ensemble. Discover Weekly is generated via a massive offline pipeline: Spark-based collaborative filtering → neural embedding generation → approximate nearest-neighbor lookup → personalized playlist assembly.",
     scalingNumbers: [
       { label: "Monthly Active Users", value: "600M+" },
@@ -546,6 +789,19 @@ export const architectures: Architecture[] = [
     concepts: ["Git DAG", "Webhook Fan-out", "Check Suites API", "Merge Queues", "Pack Files", "GitHub Actions"],
     papers: [],
     diagramType: "cicd",
+    mermaidDef: `graph LR
+  A[Developer Pushes] --> B[GitHub Webhook]
+  B --> C[Actions Queue]
+  C --> D[Runner - Linux/Mac/Win]
+  D --> E[Build & Test]
+  E --> F[Status Check API]
+  F --> G[Merge Queue]
+  G --> H[Branch Merge]
+  H --> I[Deploy]
+  style D fill:#f9a825,stroke:#f57f17
+  style F fill:#26a69a,stroke:#00897b
+  style G fill:#7e57c2,stroke:#512da8`,
+    howItWorks: "① Developer opens PR → ② GitHub fires webhook, Actions workflow YAML evaluated → ③ Available runner picks up job, code checked out → ④ Build and tests run in container → ⑤ Status check posted back to PR, required checks pass → ⑥ PR enters merge queue, squash-merged to main, deploy workflow triggered",
     videoWeek: 6,
     problem: "When a developer pushes a commit to GitHub, dozens of downstream systems must react within seconds: CI services must start builds, status checks must update, review tools must analyze the diff, and merge queues must re-evaluate readiness. GitHub hosts 200M+ repositories — the webhook fan-out from a single push event can trigger hundreds of HTTP callbacks to external services. Git's content-addressable storage model must efficiently handle repositories ranging from tiny config repos to monorepos with millions of files and decades of history.",
     solution: "GitHub's architecture separates the Git storage layer (content-addressable SHA-1 blobs/trees/commits with efficient delta compression in packfiles) from the application layer (webhook fan-out, check suites API, merge queues). When a push event occurs, GitHub's event bus triggers parallel webhook delivery to all registered CI/CD applications. Check Suites aggregate test results from multiple CI providers into a unified status. Merge queues serialize tested merges to prevent the 'broken main' problem caused by concurrent merges of independently-tested PRs.",
@@ -591,8 +847,21 @@ export const architectures: Architecture[] = [
       { title: "The LinkedIn Feed: A Recommender System for Professionals", authors: "LinkedIn Engineering", year: 2020 },
     ],
     diagramType: "ml-pipeline",
+    mermaidDef: `graph LR
+  A[Post Created] --> B[Feature Extraction]
+  B --> C[Offline Model - Hadoop]
+  C --> D[Online Feature Store]
+  D --> E[Scoring Service]
+  E --> F[Feed Assembler]
+  F --> G[User Feed]
+  G --> H[Impression Logger]
+  H -->|Feedback Loop| B
+  style C fill:#f9a825,stroke:#f57f17
+  style E fill:#26a69a,stroke:#00897b
+  style F fill:#7e57c2,stroke:#512da8`,
+    howItWorks: "① Connection publishes post → ② Features extracted (engagement history, network strength, recency) → ③ Offline BDT model scores post for each potential viewer → ④ Online ranking re-scores top candidates at request time → ⑤ Feed assembled with diversity rules (no 2 posts from same person back-to-back) → ⑥ Impressions logged, click/like fed back to retrain model",
     videoWeek: 7,
-    problem: "LinkedIn must rank and personalize a feed for 1 billion members, each with a unique professional network, industry context, and content preferences. The candidate pool includes millions of new posts daily — professional articles, job updates, company news, and engagement-bait that must be filtered. Ranking must balance multiple objectives: relevance to the member, content quality, creator incentives, and business metrics like ad revenue and session time. A poor feed drives professionals to competing platforms.",
+    problem: "LinkedIn must rank and personalize a feedfor 1 billion members, each with a unique professional network, industry context, and content preferences. The candidate pool includes millions of new posts daily — professional articles, job updates, company news, and engagement-bait that must be filtered. Ranking must balance multiple objectives: relevance to the member, content quality, creator incentives, and business metrics like ad revenue and session time. A poor feed drives professionals to competing platforms.",
     solution: "LinkedIn's feed uses a multi-stage ranking pipeline: candidate generation retrieves the top-K relevant posts from followed connections and suggested content → a lightweight first-pass model prunes to hundreds of candidates → a heavyweight second-pass model (gradient boosted trees + deep neural networks) scores each candidate on 1,000+ features → diversity injection prevents monotonous feeds → a final business-rules layer applies ad insertion and content-type quotas. Features are served from a real-time feature store with sub-5ms latency.",
     scalingNumbers: [
       { label: "Members", value: "1B+" },
@@ -634,8 +903,21 @@ export const architectures: Architecture[] = [
     concepts: ["Content-Addressable Storage", "Delta Sync", "Block Chunking", "Conflict Resolution", "LAN Sync", "Metadata Server"],
     papers: [],
     diagramType: "sync",
+    mermaidDef: `graph LR
+  A[File Saved] --> B[Chunker - 4MB Blocks]
+  B --> C[SHA-256 Hash per Chunk]
+  C --> D{Dedup Check}
+  D -->|New Block| E[Upload to S3]
+  D -->|Already Exists| F[Skip Upload]
+  E --> G[Metadata Server Notified]
+  G --> H[Other Devices Get Delta]
+  H --> I[LAN Sync - Local Network]
+  style C fill:#f9a825,stroke:#f57f17
+  style D fill:#26a69a,stroke:#00897b
+  style G fill:#7e57c2,stroke:#512da8`,
+    howItWorks: "① File saved on desktop → ② Dropbox splits file into 4MB blocks, SHA-256 hash computed per block → ③ Client checks which blocks already exist on server → ④ Only new/changed blocks uploaded to S3 → ⑤ Metadata DB updated, other signed-in devices notified via long-poll → ⑥ LAN sync transfers blocks peer-to-peer if devices on same network",
     videoWeek: 7,
-    problem: "Dropbox must synchronize files across millions of devices in near-real-time. A user edits a 2GB PowerPoint file on their laptop and expects it to appear on their phone within seconds. Uploading the entire file on every save would be prohibitively slow on typical upload speeds. Conflicts arise when two devices edit the same file offline. The system must work across flaky mobile networks, handle files of any size, and minimize both bandwidth and storage costs across 700M+ registered users.",
+    problem: "Dropbox must synchronize files across millionsof devices in near-real-time. A user edits a 2GB PowerPoint file on their laptop and expects it to appear on their phone within seconds. Uploading the entire file on every save would be prohibitively slow on typical upload speeds. Conflicts arise when two devices edit the same file offline. The system must work across flaky mobile networks, handle files of any size, and minimize both bandwidth and storage costs across 700M+ registered users.",
     solution: "Dropbox splits every file into content-addressed blocks (SHA-256 of each 4MB chunk). Only modified blocks are uploaded — editing one slide in a 2GB presentation transmits only the changed 4MB block. The Block Server stores unique blocks in S3-compatible storage; the Metadata Server tracks which blocks compose each file version. Identical blocks across different users are stored once (global deduplication). A desktop daemon monitors filesystem events (inotify/FSEvents/ReadDirectoryChangesW) to detect changes instantly.",
     scalingNumbers: [
       { label: "Registered Users", value: "700M+" },
@@ -679,8 +961,22 @@ export const architectures: Architecture[] = [
       { title: "TAO: Facebook's Distributed Data Store for the Social Graph", authors: "Bronson, N. et al. (Facebook)", year: 2013, url: "https://www.usenix.org/conference/atc13/technical-sessions/presentation/bronson" },
     ],
     diagramType: "graph",
+    mermaidDef: `graph LR
+  A[Client] --> B[TAO Follower Cache]
+  B -->|Cache Miss| C[TAO Leader Cache]
+  C -->|Cache Miss| D[MySQL Shard]
+  D --> E[Cache Populated]
+  E --> C
+  C --> B
+  B --> F[Association Query]
+  F --> G[Object + Assoc Returned]
+  G --> H[Eventual Consistency Across Regions]
+  style C fill:#f9a825,stroke:#f57f17
+  style D fill:#26a69a,stroke:#00897b
+  style B fill:#7e57c2,stroke:#512da8`,
+    howItWorks: "① Client queries 'friends of user 123' → ② TAO follower cache checked first (read-through) → ③ Cache miss escalates to TAO leader → ④ Leader misses, MySQL shard queried → ⑤ Result cached in leader, propagated to followers asynchronously → ⑥ Future reads served from cache, write invalidates cache with eventual consistency across data centers",
     videoWeek: 8,
-    problem: "Facebook's social graph contains billions of objects (users, posts, photos, comments, pages) and trillions of associations (friend-of, likes, tagged-in, authored-by). The access patterns are extremely read-heavy (>99% reads) and severely skewed — celebrity profiles and viral posts receive millions of reads per second. A traditional relational database cannot handle this read volume, and a generic caching layer (Memcached) lacks the rich query semantics needed for graph traversals like 'friends of friends who liked this post.'",
+    problem: "Facebook's social graph contains billionsof objects (users, posts, photos, comments, pages) and trillions of associations (friend-of, likes, tagged-in, authored-by). The access patterns are extremely read-heavy (>99% reads) and severely skewed — celebrity profiles and viral posts receive millions of reads per second. A traditional relational database cannot handle this read volume, and a generic caching layer (Memcached) lacks the rich query semantics needed for graph traversals like 'friends of friends who liked this post.'",
     solution: "Facebook built TAO (The Associations and Objects) — a purpose-built, geographically distributed cache-and-database system optimized for social graph access patterns. TAO models the graph as Objects (nodes with properties) and Associations (typed, directed edges with timestamps). A two-level cache hierarchy (leader + follower caches per region) provides read-after-write consistency within each region and eventual consistency globally. TAO's API is a fixed set of graph operations, eliminating the impedance mismatch of mapping graph queries to SQL.",
     scalingNumbers: [
       { label: "Objects Stored", value: "Billions" },
@@ -768,6 +1064,33 @@ export const architectures: Architecture[] = [
     ],
     diagramType: "kafka",
     videoWeek: 9,
+  
+    problem: "LinkedIn, Uber, and hundreds of companies need to process millions of events per second — user clicks, GPS pings, transactions — with zero data loss. Traditional message queues (RabbitMQ, SQS) delete messages after consumption, making replay, audit, and stream processing impossible.",
+    solution: "Kafka models the message queue as an immutable, distributed append-only log. Events are retained for configurable periods (days, weeks, forever), enabling consumers to replay history, multiple independent consumer groups to process the same stream, and stream processing frameworks (Flink, Spark) to compute aggregations in real-time.",
+    deepDive: [
+      { heading: "Partitions: The Unit of Parallelism", body: "A Kafka topic is divided into N partitions — each an ordered, immutable sequence of records stored on disk. Partitions enable horizontal scaling: each partition is owned by one broker and can be consumed by one consumer in a group. More partitions = more parallelism, but more overhead in ZooKeeper/KRaft metadata. A rule of thumb: target ~100MB/s throughput per partition." },
+      { heading: "Replication and Leader Election", body: "Each partition has one leader and N-1 replicas. All reads and writes go through the leader; replicas pull from the leader to stay in sync. The In-Sync Replicas (ISR) list tracks which replicas are caught up. If the leader fails, Kafka elects a new leader from the ISR — typically taking under 30 seconds. Setting min.insync.replicas=2 ensures durability even if one broker fails." },
+      { heading: "Consumer Groups and Offset Management", body: "Consumer groups enable parallel consumption: each partition is assigned to exactly one consumer in a group. Consumers commit their offsets (last processed message position) back to Kafka's __consumer_offsets topic. If a consumer crashes, its partitions are rebalanced to other group members. This design makes Kafka consumers stateless — any consumer can pick up where another left off." },
+      { heading: "Log Compaction: Kafka as a Database", body: "Log compaction retains only the latest value for each message key. This transforms Kafka into a key-value store: the compacted log represents the current state of all keys. Kafka Streams and ksqlDB use compacted topics as materialized views — joining streams with state without an external database. Changelog topics (used by Kafka Streams) rely entirely on log compaction for state recovery." },
+      { heading: "Exactly-Once Semantics", body: "Kafka achieves exactly-once delivery via two mechanisms: idempotent producers (each message gets a sequence number; brokers deduplicate retries) and transactions (atomic writes to multiple partitions). The transactional API allows consume-process-produce loops with exactly-once guarantees — critical for financial systems. Exactly-once comes with ~10% throughput overhead versus at-least-once." },
+    ],
+    tradeoffs: {
+      pros: ["Decouples producers from consumers — either side can scale independently", "Persistent log enables replay, auditing, and stream processing on historical data", "Extremely high throughput: 1M+ messages/sec per broker with sequential disk I/O", "Consumer groups enable the same topic to power multiple independent pipelines"],
+      cons: ["Operational complexity: broker configuration, partition rebalancing, and offset management require deep expertise", "Latency floor of ~5ms end-to-end makes Kafka unsuitable for ultra-low-latency (<1ms) use cases", "Partition count is hard to change after topic creation — requires careful upfront capacity planning", "Consumer lag monitoring is critical; silent lag buildup can cause processing delays hours later"],
+    },
+    interviewQuestions: [
+      "Design a system to process 1 million IoT sensor events per second. How would you size Kafka partitions and consumer groups?",
+      "Explain how Kafka achieves exactly-once semantics. What are the producer and consumer-side mechanisms?",
+      "A Kafka consumer group is processing 10 partitions but one consumer is consistently slower, causing lag. How do you diagnose and fix this?",
+      "Compare Kafka to RabbitMQ. For what use cases would you choose each, and what are the key architectural differences?",
+      "How does log compaction work in Kafka? Give a concrete example of when you would use a compacted topic over a regular topic.",
+    ],
+    scalingNumbers: [
+      { label: "Throughput/Broker", value: "1M+ msg/sec" },
+      { label: "Retention", value: "Unlimited" },
+      { label: "Latency (p99)", value: "< 10ms" },
+      { label: "LinkedIn Peak", value: "7T msgs/day" },
+    ],
   },
   {
     id: 18,
@@ -785,6 +1108,33 @@ export const architectures: Architecture[] = [
     papers: [],
     diagramType: "k8s",
     videoWeek: 9,
+  
+    problem: "Running thousands of containerized services in production requires solving bin-packing (which container runs on which server?), health monitoring, rolling deployments, service discovery, and network routing — all simultaneously. Manual orchestration does not scale past a few dozen services.",
+    solution: "Kubernetes provides a declarative API: you describe desired state (3 replicas of image X, with 2GB RAM), and a set of controllers continuously reconcile actual state to match. This self-healing loop handles node failures, rolling deployments, and autoscaling without human intervention.",
+    deepDive: [
+      { heading: "The Control Plane: API Server + etcd", body: "All Kubernetes state lives in etcd — a distributed key-value store with Raft consensus. The API server is the only component that reads/writes etcd directly; all other components talk to the API server. This architecture means etcd becomes the single source of truth, and any component can be restarted without losing state. etcd is typically run with 3 or 5 nodes for quorum." },
+      { heading: "Reconciliation Loops: The Heart of Kubernetes", body: "Every Kubernetes controller runs a reconciliation loop: watch for resource changes, compare desired state to actual state, take action to converge. The Deployment controller watches Deployments and manages ReplicaSets. The ReplicaSet controller watches ReplicaSets and manages Pods. This composable design means adding a new resource type (CRD) just requires writing a new controller." },
+      { heading: "The Scheduler: Bin-Packing with Constraints", body: "The Kubernetes scheduler is a two-phase process: filtering (which nodes can run this pod given CPU/memory/taints/affinities?) and scoring (which filtered node is the best fit?). Default scoring prefers spreading pods across nodes for HA and packing to maximize utilization. Custom schedulers can be plugged in for specialized workloads like GPU-intensive ML training jobs." },
+      { heading: "Networking: Services and kube-proxy", body: "Kubernetes Services provide stable virtual IPs (ClusterIP) for groups of pods. kube-proxy programs iptables or IPVS rules to DNAT traffic from the VIP to one of the backing pod IPs. A service with 10 pods gets 10 iptables rules with random selection — simple but effective. For production, a service mesh like Istio replaces this with a sidecar proxy per pod for mTLS, circuit breaking, and traffic shaping." },
+      { heading: "Custom Resource Definitions: Extending Kubernetes", body: "CRDs let you define new resource types (e.g., PostgresCluster, KafkaTopic) with custom schemas. A controller watches for these resources and takes domain-specific action. This operator pattern is how databases (Strimzi Kafka, CloudNativePG) are managed on Kubernetes — users interact with high-level abstractions while the operator handles upgrade sequencing, backup scheduling, and failover." },
+    ],
+    tradeoffs: {
+      pros: ["Self-healing: automatic pod restart, node replacement, and rescheduling on failure", "Declarative config enables GitOps: entire cluster state in version control", "Massive ecosystem: Helm charts, operators, and service meshes for every use case", "Horizontal Pod Autoscaler scales deployments automatically based on CPU/custom metrics"],
+      cons: ["Steep learning curve: YAML complexity, RBAC, networking concepts require months to master", "etcd is a single point of failure for the control plane — requires careful backup and sizing", "Networking model is complex: understanding CNI plugins, service types, and ingress controllers is non-trivial", "Resource overhead: a minimal cluster needs 3 control plane nodes plus worker nodes before running any workload"],
+    },
+    interviewQuestions: [
+      "Walk me through what happens when you run kubectl apply -f deployment.yaml. Name every component involved.",
+      "A pod is stuck in CrashLoopBackOff. Walk me through your debugging process, naming the kubectl commands you would run.",
+      "Design a deployment strategy for a stateful database on Kubernetes. How do you handle persistent storage and rolling upgrades?",
+      "Explain Kubernetes networking: how does a request from Pod A reach Pod B on a different node?",
+      "When would you NOT use Kubernetes? What are the operational tradeoffs versus simpler alternatives like ECS or plain VMs?",
+    ],
+    scalingNumbers: [
+      { label: "Max Nodes/Cluster", value: "5,000" },
+      { label: "Max Pods/Cluster", value: "150,000" },
+      { label: "Scheduling Latency", value: "< 100ms" },
+      { label: "etcd Recommended Size", value: "3 or 5 nodes" },
+    ],
   },
   {
     id: 19,
@@ -802,6 +1152,33 @@ export const architectures: Architecture[] = [
     papers: [],
     diagramType: "database",
     videoWeek: 10,
+  
+    problem: "Databases need to handle concurrent reads and writes from thousands of connections without readers blocking writers or vice versa. Traditional lock-based concurrency causes contention at scale: a long-running read blocks all writes to the same rows, creating hotspots.",
+    solution: "PostgreSQL implements MVCC (Multi-Version Concurrency Control): every write creates a new row version rather than updating in place. Readers see a consistent snapshot from their transaction start time without taking any locks. The Write-Ahead Log (WAL) ensures durability — every change is written to an append-only log before modifying data pages, enabling crash recovery and replication.",
+    deepDive: [
+      { heading: "MVCC: How Snapshots Work", body: "Each PostgreSQL row has hidden system columns: xmin (transaction ID that created it) and xmax (transaction ID that deleted it). A query's snapshot sees rows where xmin is at most the snapshot transaction ID and xmax is null or greater than the snapshot ID. This means old row versions coexist with new ones on the same heap page. Readers never block writers; writers never block readers. The trade-off is storage bloat from multiple row versions." },
+      { heading: "The Write-Ahead Log", body: "Before any data page is modified, the change is recorded in WAL — a sequential append-only file. On crash, PostgreSQL replays WAL from the last checkpoint to reconstruct any in-flight transactions. Sequential WAL writes are orders of magnitude faster than random data page writes, so most of PostgreSQL's write performance comes from WAL efficiency. WAL segments (16MB by default) are archived for point-in-time recovery." },
+      { heading: "VACUUM: Reclaiming Dead Versions", body: "MVCC's cost is dead row versions — old versions that no transaction can see anymore. VACUUM reclaims this space by marking dead tuples as reusable and updating the visibility map. AUTOVACUUM runs VACUUM automatically based on a dead-tuple threshold (default: 20% of rows). Failure to vacuum causes table bloat, index bloat, and eventually transaction ID wraparound — a critical failure mode that freezes the database." },
+      { heading: "Streaming Replication", body: "PostgreSQL primary servers stream WAL records to replica servers in near-real-time. Replicas apply WAL records to stay in sync, typically with less than 100ms lag. Replicas can serve read-only queries, distributing read load. Failover promotes a replica to primary — with synchronous_standby_names, you can guarantee zero data loss promotion. Tools like Patroni automate this failover with etcd-based leader election." },
+      { heading: "Transaction Isolation Levels", body: "PostgreSQL supports four isolation levels: Read Uncommitted (same as Read Committed in Postgres), Read Committed (default — each statement sees a fresh snapshot), Repeatable Read (snapshot taken at transaction start, prevents non-repeatable reads), and Serializable (SSI algorithm detects and aborts serialization anomalies). Serializable Snapshot Isolation in Postgres provides true serializability without locking, unique among major databases." },
+    ],
+    tradeoffs: {
+      pros: ["MVCC enables readers and writers to never block each other, maximizing concurrency", "WAL provides crash safety and enables streaming replication with near-zero data loss", "Rich feature set: JSON, full-text search, PostGIS, partitioning, parallel queries", "Serializable Snapshot Isolation provides true ACID serializability without lock contention"],
+      cons: ["VACUUM overhead: autovacuum can cause I/O spikes; table bloat degrades performance if neglected", "Write amplification: WAL plus heap page plus index updates equals 3-5x write I/O per logical write", "Connection overhead: each connection spawns a backend process (~5MB); PgBouncer is required for hundreds of connections", "MVCC transaction ID wraparound is a catastrophic failure mode if VACUUM is delayed too long"],
+    },
+    interviewQuestions: [
+      "Explain MVCC in PostgreSQL. How does it allow concurrent reads and writes without locking?",
+      "What is VACUUM and why is it critical? What happens if autovacuum falls behind?",
+      "Design a read-replica setup for a PostgreSQL database receiving 50,000 reads/sec and 5,000 writes/sec.",
+      "Compare PostgreSQL MVCC with MySQL InnoDB's approach to concurrency control.",
+      "A PostgreSQL query that used to take 10ms now takes 5 seconds. Walk me through your diagnostic process.",
+    ],
+    scalingNumbers: [
+      { label: "Max DB Size", value: "Unlimited (PB+)" },
+      { label: "Max Table Size", value: "32 TB" },
+      { label: "Replication Lag", value: "< 100ms" },
+      { label: "Max Connections", value: "~200 (native)" },
+    ],
   },
   {
     id: 20,
@@ -819,6 +1196,33 @@ export const architectures: Architecture[] = [
     papers: [],
     diagramType: "edge",
     videoWeek: 10,
+  
+    problem: "Traditional CDNs cache static files, but modern applications require dynamic computation at the edge — authentication, A/B testing, personalization, bot detection — without the 50-200ms round trip to an origin server. Serverless functions in datacenters add latency; containers take seconds to cold-start.",
+    solution: "Cloudflare runs V8 JavaScript isolates — not containers or VMs — inside 300+ global Points of Presence. Isolates start in under 1ms (shared V8 process, isolated heap), enabling true serverless at the edge with geographic routing via anycast BGP. Workers KV and Durable Objects provide edge-local storage with strong consistency guarantees.",
+    deepDive: [
+      { heading: "Anycast BGP: Automatic Geographic Routing", body: "Cloudflare announces the same IP addresses from all 300+ PoPs simultaneously using anycast BGP. The internet routing protocol automatically directs each user's packets to the topologically closest Cloudflare datacenter — no DNS-based routing or client-side logic needed. This means a DDoS attack absorbs across hundreds of PoPs simultaneously, and every user gets sub-20ms latency to a Cloudflare node." },
+      { heading: "V8 Isolates vs. Containers", body: "A Docker container starts a new OS process with 100ms+ cold start and its own memory space. A V8 isolate starts inside an existing V8 process in under 1ms — it gets an isolated JavaScript heap but shares the V8 JIT compiler, garbage collector, and bytecode cache. Cloudflare runs thousands of isolates per physical machine, each for a different customer Worker, with cryptographic isolation between them. This density is impossible with containers." },
+      { heading: "Workers KV: Eventually-Consistent Edge Storage", body: "Workers KV replicates key-value data to all 300+ PoPs with eventual consistency. Reads are always served locally (sub-1ms), but writes propagate within 60 seconds globally. This makes KV ideal for configuration data, feature flags, and user sessions where stale reads are acceptable. The model is similar to a CDN cache: high read performance, eventual write propagation." },
+      { heading: "Durable Objects: Stateful Actors at the Edge", body: "Durable Objects solve KV's consistency limitations: each Durable Object is a stateful actor with a unique ID, guaranteed to run in exactly one location worldwide. All requests to a Durable Object are serialized — enabling collaborative features, rate limiting counters, and WebSocket connection management with strong consistency. The object migrates automatically if its region becomes unhealthy." },
+      { heading: "The Request Lifecycle", body: "A request to a Worker: DNS resolves to anycast IP, nearest PoP receives packet, TLS terminates with 1-RTT (0-RTT resumption for returning visitors), Worker isolate starts in under 1ms if warm or under 5ms cold, JavaScript executes, response returned. Total latency overhead versus serving a static file is about 5ms. This makes Workers viable for auth tokens, HTML rewriting, and API proxying that traditionally required origin round trips." },
+    ],
+    tradeoffs: {
+      pros: ["Sub-1ms cold starts enable true serverless at the edge without function warmup strategies", "Anycast BGP provides automatic DDoS mitigation and geographic load balancing", "Workers KV serves millions of reads/sec with sub-millisecond latency globally", "No VMs or containers to manage — pure code deployment"],
+      cons: ["Workers have strict CPU time limits (10-50ms) unsuitable for compute-intensive tasks", "V8 isolate environment lacks Node.js stdlib — porting existing code requires rewrites", "Durable Object consistency requires routing all requests for a key to one location, adding latency for geographically distributed users", "Workers KV eventual consistency (60s propagation) causes stale-read bugs if not carefully designed around"],
+    },
+    interviewQuestions: [
+      "Design a global rate limiter using Cloudflare Workers and Durable Objects. How do you handle the consistency vs. latency tradeoff?",
+      "Explain the difference between Cloudflare Workers KV and Durable Objects. When would you choose each?",
+      "Why can V8 isolates start in under 1ms while Docker containers take 100ms+? What are the security tradeoffs?",
+      "How does anycast BGP work? Why is Cloudflare's anycast network more DDoS-resilient than a unicast IP?",
+      "Design an edge authentication system using Workers. How do you validate JWTs without hitting an origin server?",
+    ],
+    scalingNumbers: [
+      { label: "PoPs Worldwide", value: "300+" },
+      { label: "Worker Cold Start", value: "< 1ms" },
+      { label: "KV Read Latency", value: "< 1ms" },
+      { label: "Requests Served/Day", value: "1.2 trillion+" },
+    ],
   },
 
   // ΓöÇΓöÇ LLM & AI SYSTEMS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
@@ -841,6 +1245,33 @@ export const architectures: Architecture[] = [
     ],
     diagramType: "llm-inference",
     videoWeek: 11,
+  
+    problem: "A transformer model with 70B parameters has weights totaling ~140GB in FP16. Generating each output token requires loading all weights through GPU memory bandwidth. A 70B model on an A100 takes ~80GB VRAM and generates only 20-30 tokens/second, making it far too slow and expensive to serve millions of users.",
+    solution: "LLM inference engineering attacks the memory-bandwidth bottleneck through KV caching (skip recomputing prompt attention), FlashAttention (IO-aware attention reducing memory traffic 3x), quantization (INT8/INT4 reducing weights 2-4x), and continuous batching (process many user requests in one GPU forward pass). Together, these optimizations achieve 10-50x throughput over a naive baseline.",
+    deepDive: [
+      { heading: "The KV Cache: Avoiding Redundant Computation", body: "During autoregressive generation, each new token attends to all previous tokens. Without caching, this requires recomputing attention over the entire prompt for every output token — quadratic work per sequence. The KV cache stores the key and value tensors for all previously computed tokens. Only the new token needs to run through the transformer; previous tokens' K/V tensors are loaded from cache. This reduces generation from O(n^2) to O(n) per token." },
+      { heading: "FlashAttention: IO-Aware Attention", body: "Standard attention materializes the full N x N attention matrix in GPU HBM (high-bandwidth memory), then reads it back for softmax and value aggregation. For a 2048-token sequence, this matrix is 2048 x 2048 x 2 bytes = 8MB per layer — reading and writing it dominates runtime. FlashAttention fuses all attention operations into a single kernel using SRAM tiling, never materializing the full matrix. Result: 3x faster attention, 10x less memory." },
+      { heading: "Quantization: Shrinking the Weights", body: "INT8 quantization represents model weights with 8-bit integers instead of 16-bit floats — halving memory and bandwidth requirements. INT4 (used in GPTQ, AWQ) goes further to 4 bits — 4x compression. The challenge is minimizing accuracy loss: weight distribution is non-uniform, so naive rounding causes significant degradation. GPTQ uses second-order gradient information to find optimal quantization points. INT4 models typically show less than 1% quality loss on benchmarks." },
+      { heading: "Continuous Batching: Maximizing GPU Utilization", body: "Static batching waits for a batch of N requests to start together and finishes them together — GPU sits idle waiting for the slowest sequence. Continuous batching (pioneered by Orca and vLLM) dynamically adds new requests to the batch as slots free up from completed sequences. A GPU always has a full batch of tokens to process. This increases throughput by 2-4x for typical production traffic distributions." },
+      { heading: "Speculative Decoding: Parallel Token Generation", body: "Standard LLM generation is serial: one token per forward pass. Speculative decoding uses a small draft model (e.g., 7B) to predict K tokens ahead, then verifies all K with the target model in a single forward pass. If the target model agrees with the draft's top-K tokens, all K tokens are accepted — K tokens generated in the time of 1. For highly predictable completions (code, structured data), 3-5x speedups are achievable." },
+    ],
+    tradeoffs: {
+      pros: ["KV cache eliminates quadratic attention recomputation, making long-context generation practical", "INT4 quantization achieves 4x memory reduction with less than 1% quality loss on most tasks", "Continuous batching increases GPU utilization from ~30% to 70-90% on production traffic", "FlashAttention makes 100K+ token context windows tractable on modern GPUs"],
+      cons: ["KV cache grows linearly with sequence length — a 100K token context requires ~20GB of KV cache for a 70B model", "INT4 quantization quality degradation is task-dependent and may be unacceptable for reasoning-heavy applications", "Speculative decoding requires running two models and adds complexity; gains vary significantly by output type", "Continuous batching scheduler complexity: different requests at different sequence lengths require careful memory management"],
+    },
+    interviewQuestions: [
+      "Explain why LLM inference is memory-bandwidth bound rather than compute-bound. What does this mean for optimization strategy?",
+      "How does the KV cache work? What are its memory implications for long-context models?",
+      "Design a serving system for a 70B LLM that must handle 1,000 concurrent users with p95 latency under 3 seconds.",
+      "Explain speculative decoding. Under what conditions does it provide the biggest speedup, and when does it fail?",
+      "Compare INT8 and INT4 quantization. What are the tradeoffs, and how does GPTQ minimize quality loss?",
+    ],
+    scalingNumbers: [
+      { label: "70B Model Memory", value: "~140GB FP16" },
+      { label: "FlashAttn Speedup", value: "3x vs. naive" },
+      { label: "INT4 Compression", value: "4x smaller" },
+      { label: "Continuous Batch Gain", value: "2-4x throughput" },
+    ],
   },
   {
     id: 22,
@@ -860,6 +1291,33 @@ export const architectures: Architecture[] = [
     ],
     diagramType: "rag",
     videoWeek: 11,
+  
+    problem: "Large language models have knowledge cutoffs and hallucinate facts confidently. Retraining a model costs millions of dollars and takes months, making it impractical to keep models updated with new documents, proprietary knowledge bases, or real-time information.",
+    solution: "Retrieval-Augmented Generation (RAG) keeps model weights frozen and instead injects relevant context at inference time. When a query arrives, a retrieval system searches a vector database of document embeddings, finds the K most relevant chunks, and appends them to the LLM prompt. The LLM generates its response grounded in retrieved facts — dramatically reducing hallucination.",
+    deepDive: [
+      { heading: "Document Ingestion and Chunking Strategy", body: "Raw documents (PDFs, HTML, DOCX) are parsed into text, then chunked into segments of 200-1000 tokens each. Chunking strategy dramatically affects retrieval quality: too-small chunks lose context, too-large chunks dilute relevance. Recursive character splitting (split at paragraphs, then sentences, then words) produces more natural chunks than fixed-size windows. Sliding window chunking with overlap ensures concepts spanning chunk boundaries are retrievable." },
+      { heading: "Embedding Models and Vector Stores", body: "Text chunks are converted to dense vectors using an embedding model (OpenAI text-embedding-3-small, Cohere embed-v3, E5-large). A 1536-dimensional embedding represents the semantic meaning of a chunk. These vectors are indexed in a vector database (Pinecone, Weaviate, pgvector) using HNSW for approximate nearest neighbor search. Retrieval time is typically 5-20ms for billion-scale indexes." },
+      { heading: "Hybrid Retrieval: Dense + Sparse", body: "Pure vector search misses exact keyword matches (product codes, names, error messages). Production RAG systems combine dense vector search with sparse BM25 retrieval in parallel, then fuse results using Reciprocal Rank Fusion (RRF). RRF takes the rank position from each retriever and combines them: score = sum of 1/(k + rank_i). No score normalization needed — ranks are comparable across retrievers." },
+      { heading: "Re-ranking for Precision", body: "The top-K retrieved chunks go through a cross-encoder re-ranker that scores each chunk against the query with full bidirectional attention (unlike the bi-encoder used for initial retrieval). Cross-encoders are 10x slower but 20-30% more accurate. Re-ranking with a Cohere or Jina re-ranker on the top-20 retrieved results, returning the top-5 to the LLM, is a common production pattern." },
+      { heading: "Evaluation and Quality Measurement", body: "RAG quality has two components: retrieval quality (did we retrieve the right chunks?) and generation quality (did the LLM correctly use the retrieved context?). RAGAS is a popular evaluation framework measuring faithfulness (is the answer grounded in the context?), answer relevancy, and context precision/recall. A/B testing chunk sizes, embedding models, and top-K values against RAGAS scores drives systematic improvement." },
+    ],
+    tradeoffs: {
+      pros: ["Zero retraining cost — update the knowledge base without touching model weights", "Provable grounding: answers can cite source documents, reducing hallucination", "Works with any LLM as a black box — retrieval is model-agnostic", "Incremental updates: add new documents in seconds without reprocessing the full corpus"],
+      cons: ["Retrieval failures propagate: if the wrong chunks are retrieved, the LLM generates a confident wrong answer", "Chunking is fragile — table data, code, and multi-document reasoning are poorly served by simple chunking", "Context window limits constrain how many chunks fit: 5-10 chunks at 500 tokens each consumes a significant portion of the context window", "Latency overhead: retrieval plus re-ranking adds 50-200ms to every query"],
+    },
+    interviewQuestions: [
+      "Design a RAG system for a 10,000-document legal knowledge base. Walk through every component from ingestion to generation.",
+      "What is the most important hyperparameter in a RAG system, and why? How would you tune it?",
+      "Explain hybrid retrieval. Why does combining BM25 and vector search outperform either alone?",
+      "A RAG system is producing hallucinated answers despite retrieving relevant chunks. What could be causing this?",
+      "How would you evaluate RAG quality systematically? What metrics would you track in production?",
+    ],
+    scalingNumbers: [
+      { label: "Typical Chunk Size", value: "200-500 tokens" },
+      { label: "Retrieval Latency", value: "5-20ms" },
+      { label: "Re-ranking Gain", value: "+20-30% precision" },
+      { label: "Hallucination Reduction", value: "~50-70%" },
+    ],
   },
   {
     id: 23,
@@ -879,6 +1337,33 @@ export const architectures: Architecture[] = [
     ],
     diagramType: "vector-db",
     videoWeek: 12,
+  
+    problem: "Machine learning models generate high-dimensional vector embeddings (1536-dim text, 512-dim images, 768-dim audio) that encode semantic meaning. Finding the most similar vectors to a query vector in a dataset of 1 billion embeddings using brute-force cosine similarity requires 1 billion multiplications per query — far too slow for real-time search.",
+    solution: "Vector databases use Approximate Nearest Neighbor (ANN) algorithms — primarily HNSW (Hierarchical Navigable Small World graphs) and IVF (Inverted File Index) — to answer nearest-neighbor queries in O(log N) time with configurable recall. A 95% recall@10 search on 1 billion vectors typically takes under 10ms, enabling real-time semantic search at billion scale.",
+    deepDive: [
+      { heading: "HNSW: The Small-World Graph Index", body: "HNSW builds a multi-layer graph where each node is a vector. The top layer is a sparse long-range graph (few connections, fast traversal); lower layers are progressively denser. A query starts at the top layer's entry point, greedily traverses to the nearest neighbor, descends to the next layer, and repeats. This multi-scale structure gives O(log N) search time. The ef_construction and ef_search parameters control the recall-latency tradeoff at build time and query time respectively." },
+      { heading: "IVF: Clustering-Based Search", body: "IVF pre-clusters the dataset into K clusters (e.g., K=1000 using k-means). At query time, the search only examines the nprobe nearest cluster centroids and their members. With nprobe=10, you search only 1% of the data — enormous speedup. IVF is more memory-efficient than HNSW (centroids in RAM, vectors on disk with IVF-Flat) but has lower recall for the same latency. IVF-PQ combines IVF with Product Quantization for billion-scale deployment." },
+      { heading: "Product Quantization: Compressing Embeddings", body: "A 1536-dim float32 vector takes 6KB. Product Quantization (PQ) splits the vector into M sub-vectors and quantizes each sub-vector to 256 centroids (1 byte). A 1536-dim vector compresses to M bytes — up to 768x compression for M=2. Distance computation uses pre-computed lookup tables between query sub-vectors and all centroids. PQ reduces memory from TBs to GBs but costs roughly 10-15% recall." },
+      { heading: "Filtered Search: The Hard Problem", body: "Production vector search almost always includes metadata filters: find the 10 most similar products that are in stock and cost under $50. The naive approach is vector search then filter. If only 0.1% of vectors match the filter, this requires 1000x more candidates. Pre-filtering (apply metadata filter first, then search the subset) is accurate but slow for large datasets. Most production vector databases implement graph-based filtered search that integrates filters into HNSW traversal." },
+      { heading: "Sharding and Distributed Search", body: "A billion-vector index does not fit on one machine — HNSW requires keeping the entire graph in RAM (typically 40-80 bytes per vector). Distributed vector search partitions vectors across shards, runs parallel searches on each, and merges the top-K results from each shard. The merge step is a simple K-way merge of sorted lists. With M shards, you must retrieve K*M candidates per shard to guarantee the global top-K results — this amplifies network traffic for high-K searches." },
+    ],
+    tradeoffs: {
+      pros: ["HNSW achieves 95%+ recall at sub-10ms latency on billion-scale datasets", "Semantic search finds conceptually similar items without exact keyword matches", "Product Quantization enables billion-scale indexes that fit in under 100GB RAM", "Metadata filtering enables complex query combinations of semantic similarity and structured filters"],
+      cons: ["HNSW index build time is O(N log N) and can take hours for billion-scale datasets", "HNSW requires the entire graph in RAM — memory cost is 40-80 bytes per vector regardless of vector size", "Recall-latency tradeoff means perfect recall requires brute force; ANN always sacrifices some correctness", "Filtered search quality degrades dramatically for highly selective filters — requires careful index design"],
+    },
+    interviewQuestions: [
+      "Explain HNSW. How does its multi-layer structure enable sub-linear search time?",
+      "Design a vector database that supports 1 billion product embeddings with metadata filtering. How would you handle sharding?",
+      "Compare HNSW and IVF. For what dataset sizes and query patterns would you choose each?",
+      "What is Product Quantization? How does it achieve 100x compression, and what accuracy tradeoff does it make?",
+      "A vector search query returns irrelevant results despite the documents seeming related. What could be wrong, and how do you debug it?",
+    ],
+    scalingNumbers: [
+      { label: "HNSW Search Latency", value: "< 10ms at 1B" },
+      { label: "Typical Recall@10", value: "95-99%" },
+      { label: "PQ Compression", value: "100-400x" },
+      { label: "Memory/Vector (HNSW)", value: "~40-80 bytes" },
+    ],
   },
   {
     id: 24,
@@ -896,6 +1381,33 @@ export const architectures: Architecture[] = [
     papers: [],
     diagramType: "gateway",
     videoWeek: 12,
+  
+    problem: "Organizations using multiple LLM providers face runaway costs, reliability gaps when a provider is down, token-based rate limits that differ from request-based limits, and no visibility into which teams or features are consuming how much AI budget. Managing this directly in application code creates a fragmented, unmanageable mess.",
+    solution: "An LLM API gateway sits between applications and LLM providers, providing unified token-aware rate limiting, cost attribution, intelligent model routing, semantic caching, and fallback chains — all transparent to the calling application. Token bucket algorithms track per-user/team token consumption; semantic caching returns cached responses for similar (not just identical) prompts.",
+    deepDive: [
+      { heading: "Token-Based Rate Limiting", body: "LLM providers rate-limit in tokens per minute (TPM), not requests per minute. A single GPT-4 request can consume 1 token or 32,000 tokens — request-based rate limiters are therefore useless. The gateway must track running token consumption per API key using a token bucket algorithm with two buckets: one for input tokens and one for output (output tokens are 3-4x more expensive). When a bucket is nearly full, the gateway queues or rejects new requests." },
+      { heading: "Semantic Caching", body: "Exact-match caching (cache the response for identical prompts) has low hit rates — users rarely send identical prompts. Semantic caching embeds each prompt and stores it in a vector database. On new requests, if the embedding distance to a cached prompt is below a threshold (e.g., cosine similarity > 0.97), return the cached response. This can achieve 20-40% cache hit rates on repetitive workloads like customer support or code generation for common patterns." },
+      { heading: "Model Routing and Fallback Chains", body: "Not all queries need GPT-4. A router can classify query complexity (simple factual lookup vs. multi-step reasoning) and route to the cheapest model that meets quality requirements. A cost-optimized routing table might be: GPT-4o for complex reasoning (top 10% of queries), GPT-4o-mini for standard queries, Claude Haiku for simple tasks. Fallback chains handle provider outages: if the primary model times out after 3 seconds, retry with a fallback model automatically." },
+      { heading: "Cost Attribution and Budgeting", body: "In a multi-team organization, the gateway tags every request with team ID, feature name, and model tier. A time-series cost database (ClickHouse, TimescaleDB) records token counts and dollar costs per request. This enables per-team cost dashboards, budget alerts ('Team X has spent 80% of this month AI budget'), and automated throttling when teams exceed budgets. Showback and chargeback reports enable finance teams to allocate AI costs accurately." },
+      { heading: "Prompt Management and Versioning", body: "The gateway can store versioned prompt templates and inject them automatically. When an application calls generateResponse with a template ID and variables, the gateway fetches the template, fills variables, and sends to the LLM. A/B testing different prompt versions (randomly route 10% to summarize-v4) with outcome logging enables systematic prompt optimization without code deploys. Prompt registry also prevents prompt injection via strict variable substitution." },
+    ],
+    tradeoffs: {
+      pros: ["Centralizes LLM governance: rate limiting, cost control, and audit logging in one place", "Semantic caching can reduce LLM costs by 20-40% on repetitive workloads", "Model routing reduces average cost by 50-70% without degrading quality for most requests", "Provider fallback chains improve reliability from ~99.9% to ~99.99%"],
+      cons: ["The gateway becomes a critical single point of failure — it must be highly available with under 5ms overhead", "Semantic caching requires careful threshold tuning — too loose returns wrong answers, too strict misses cache hits", "Model routing quality depends on the routing classifier — a bad classifier sends complex queries to cheap models", "Adds operational complexity: another service to deploy, monitor, and scale"],
+    },
+    interviewQuestions: [
+      "Design a token-aware rate limiter for an LLM API gateway. How do you handle token consumption that is not known until the response completes?",
+      "How does semantic caching work? What threshold would you use for cache hits, and how would you evaluate quality?",
+      "Design a model routing system that minimizes cost while maintaining quality. What signals would the router use?",
+      "Your LLM gateway needs to handle 10,000 requests per minute with p99 latency under 50ms overhead. What architecture would you use?",
+      "How would you implement per-team LLM cost attribution in a multi-tenant gateway? What data would you store and how?",
+    ],
+    scalingNumbers: [
+      { label: "Semantic Cache Hit Rate", value: "20-40%" },
+      { label: "Cost Reduction (routing)", value: "50-70%" },
+      { label: "Gateway Overhead Target", value: "< 5ms p99" },
+      { label: "Provider Fallback SLA", value: "99.99% uptime" },
+    ],
   },
   {
     id: 25,
@@ -915,6 +1427,33 @@ export const architectures: Architecture[] = [
     ],
     diagramType: "multi-agent",
     videoWeek: 13,
+  
+    problem: "Complex tasks like software development, research analysis, and multi-step planning exceed the context window and capabilities of a single LLM call. A single agent writing and running code, debugging errors, searching documentation, and formatting outputs creates context window pressure, error accumulation, and poor maintainability.",
+    solution: "Multi-agent systems decompose complex tasks across specialized agents orchestrated by a planner. Each agent has a focused role (code writer, test runner, critic, researcher) with specific tools and context. LangGraph models the orchestration as a directed cyclic graph — agents communicate via structured messages, can loop, branch, and call tools, with human-in-the-loop checkpoints at critical decision points.",
+    deepDive: [
+      { heading: "The ReAct Pattern: Reason + Act Loop", body: "ReAct (Reasoning and Acting) is the fundamental agent execution pattern. The LLM generates a thought (I need to search for X), then an action (call search_web), observes the result, generates a new thought, and repeats until it can generate a final answer. This interleaving of reasoning and external tool calls enables solving multi-step problems. ReAct agents are more reliable than pure chain-of-thought because each step can be verified against tool outputs." },
+      { heading: "LangGraph: State Machine Orchestration", body: "LangGraph models agent workflows as directed graphs with typed state. Nodes are agents or tools; edges define transitions with optional conditions. Unlike linear chains, LangGraph supports cycles — an agent can loop back to a previous step, enabling iterative refinement (code, test, fix, test, fix). State is passed between nodes as typed dictionaries, enabling each agent to access only the context it needs. Checkpointing saves state to persist long-running workflows across process restarts." },
+      { heading: "Tool Use and Function Calling", body: "Modern LLMs support structured function calling: the model outputs a JSON object with function name and arguments rather than free text. This enables reliable tool integration — web search, code execution, database queries, API calls. The gateway validates the function call schema, executes the tool, and returns structured results. Tool use reliability is the biggest practical challenge in agents: models hallucinate function arguments, call tools in wrong order, or get stuck in loops." },
+      { heading: "Memory Systems: Short, Long, and Episodic", body: "Agents need multiple memory types: short-term (conversation history in the context window, limited to ~100K tokens), long-term (vector database of facts and documents, retrieved via semantic search), and episodic (structured records of past task executions for self-reflection). Production systems combine all three: short-term context manages the current task, long-term provides domain knowledge, and episodic memory enables learning from past successes and failures." },
+      { heading: "Human-in-the-Loop Checkpoints", body: "Fully autonomous agents accumulate errors — a wrong assumption in step 3 can cascade into a complete failure by step 15. Production systems insert human checkpoints at high-risk decision points: before executing destructive operations (DELETE queries, file deletions), before making external API calls, or when the agent uncertainty is high. LangGraph's interrupt mechanism pauses execution and returns control to the human for approval, with the option to inject corrective guidance before resuming." },
+    ],
+    tradeoffs: {
+      pros: ["Decomposition enables solving tasks too complex for a single context window", "Specialized agents outperform generalist agents on their specific subtasks", "LangGraph state persistence enables long-running workflows that survive process crashes", "Human checkpoints prevent catastrophic errors in agentic pipelines"],
+      cons: ["Error accumulation: mistakes in early agents compound in downstream agents without intervention", "Latency: a 10-step agent pipeline with tool calls may take 30-120 seconds end-to-end", "Cost: each agent call costs tokens; a complex 20-step pipeline can cost $0.10-$1.00 per task", "Debugging is hard: understanding why a multi-agent system failed requires replaying the entire state graph"],
+    },
+    interviewQuestions: [
+      "Design a multi-agent system for automated code review. What agents would you need, and how would they communicate?",
+      "Explain the ReAct pattern. What are its failure modes, and how do you make an agent more reliable?",
+      "How would you implement memory for a long-running agent that needs to remember context from previous sessions?",
+      "Your multi-agent system is producing wrong answers and you cannot figure out why. How do you add observability?",
+      "When would you NOT use a multi-agent approach? What are the simpler alternatives and when are they sufficient?",
+    ],
+    scalingNumbers: [
+      { label: "Typical Pipeline Steps", value: "5-20 agents" },
+      { label: "Task Completion Time", value: "30s - 10min" },
+      { label: "Cost per Complex Task", value: "$0.10 - $1.00" },
+      { label: "Human Checkpoint Rate", value: "1-3 per workflow" },
+    ],
   },
   {
     id: 26,
@@ -935,6 +1474,33 @@ export const architectures: Architecture[] = [
     ],
     diagramType: "training-pipeline",
     videoWeek: 13,
+  
+    problem: "Training a new LLM from scratch costs $10M-$100M in compute and takes months. Yet organizations need models specialized to their domain (legal, medical, code) or aligned with their specific style and tone. General-purpose models like GPT-4 are capable but not optimized for specialized tasks and cannot be customized.",
+    solution: "Fine-tuning adapts a pre-trained model's behavior by continuing training on a smaller domain-specific dataset. LoRA (Low-Rank Adaptation) makes this practical: instead of updating 70 billion parameters, it freezes the base model and adds tiny adapter matrices (millions of parameters) that capture domain-specific changes. QLoRA further enables fine-tuning a 65B model on a single 48GB GPU through 4-bit quantization.",
+    deepDive: [
+      { heading: "LoRA: Low-Rank Weight Adaptation", body: "Full fine-tuning updates all model weights — a 7B model has 7 billion floating-point parameters to update, store, and serve. LoRA's insight: weight updates during fine-tuning have low intrinsic rank. Instead of updating W directly, LoRA adds delta_W = B*A where B is (d x r) and A is (r x d) with rank r much smaller than d. For rank 16 and d=4096, this is 131,072 trainable parameters instead of 16.7 million — 128x reduction. Multiple LoRA adapters can be merged into the base model or swapped per-request for multi-task deployment." },
+      { heading: "QLoRA: Fine-Tuning on Consumer Hardware", body: "LoRA still requires the base model in memory — a 65B FP16 model needs 130GB VRAM, far exceeding a single GPU. QLoRA quantizes the base model to 4-bit using a novel NF4 (NormalFloat4) quantization scheme and double quantization, reducing memory by 4x. The base model is frozen in 4-bit; LoRA adapters are trained in 16-bit bfloat16 using gradient checkpointing. This enables fine-tuning a 65B model on a single A100-80GB GPU — previously requiring 4-8 GPUs." },
+      { heading: "Instruction Fine-Tuning and Dataset Curation", body: "The most important factor in fine-tuning quality is dataset quality. Instruction fine-tuning trains on (instruction, response) pairs to teach the model to follow directions. Even 1,000-10,000 high-quality examples can dramatically improve task performance. Dataset curation involves: deduplication (near-duplicate examples reduce diversity), quality filtering (remove low-quality completions), format consistency, and mixing domain-specific data with general data to preserve broad capabilities." },
+      { heading: "DPO: Replacing RLHF Complexity", body: "RLHF (Reinforcement Learning from Human Feedback) trains a separate reward model from human preference data, then uses PPO to optimize the LLM against this reward model — a complex, unstable training procedure. DPO (Direct Preference Optimization) reformulates the same objective without a reward model: given pairs of (preferred, rejected) completions, directly fine-tune the LLM to assign higher probability to preferred completions. DPO is more stable, faster, and achieves comparable alignment quality to RLHF." },
+      { heading: "Evaluation and Preventing Catastrophic Forgetting", body: "Fine-tuned models suffer catastrophic forgetting: optimizing heavily for a new task can degrade performance on the original capabilities. Evaluation requires both domain benchmarks (did the model learn the target task?) and general benchmarks (MMLU, HellaSwag, HumanEval — did it forget general reasoning?). Mixing domain fine-tuning data with a small fraction of general instruction data (5-10%) typically prevents forgetting while maintaining domain specialization." },
+    ],
+    tradeoffs: {
+      pros: ["LoRA reduces trainable parameters by 100-10,000x vs. full fine-tuning", "QLoRA enables fine-tuning 65B models on a single GPU, democratizing LLM customization", "Fine-tuned models outperform prompting on consistent formatting, domain vocabulary, and style", "DPO alignment is stable, simple, and achieves comparable results to RLHF"],
+      cons: ["Fine-tuned models degrade on tasks not in training data — catastrophic forgetting requires mitigation strategies", "Dataset curation is manual and expensive — 1,000 high-quality examples may take weeks to create", "LoRA adapters must be merged or hot-swapped for inference — adds serving infrastructure complexity", "Evaluating fine-tuning quality requires domain-specific benchmarks that often do not exist"],
+    },
+    interviewQuestions: [
+      "Explain LoRA. How does low-rank decomposition work, and why does it reduce parameters so dramatically?",
+      "Design a fine-tuning pipeline for a medical document summarization model. What data would you collect, and how would you evaluate quality?",
+      "Compare DPO and RLHF for model alignment. What are the practical advantages of DPO?",
+      "How do you prevent catastrophic forgetting when fine-tuning on a narrow domain dataset?",
+      "When is fine-tuning better than prompting, and when is prompting better? Give concrete examples.",
+    ],
+    scalingNumbers: [
+      { label: "LoRA Param Reduction", value: "100-10,000x" },
+      { label: "QLoRA GPU Savings", value: "4x less VRAM" },
+      { label: "Min Quality Dataset", value: "1K-10K examples" },
+      { label: "Fine-tune Time (7B)", value: "2-8 hours A100" },
+    ],
   },
   {
     id: 27,
@@ -954,6 +1520,32 @@ export const architectures: Architecture[] = [
     ],
     diagramType: "kv-cache",
     videoWeek: 14,
+  
+    solution: "PagedAttention from vLLM manages the KV cache using a virtual memory paging metaphor: cache is divided into fixed-size blocks (pages) that are allocated on demand and freed when a request completes. Blocks are mapped to physical GPU memory via a block table — just like OS virtual memory. This eliminates internal and external fragmentation, enabling the GPU to run 2-4x more concurrent requests with the same memory.",
+    deepDive: [
+      { heading: "The KV Cache Memory Problem", body: "Without PagedAttention, each request pre-allocates a KV cache sized to the maximum sequence length at request start. A request limited to 2048 tokens allocates memory for 2048 tokens even if it only uses 100 — 95% waste. When many requests are in flight simultaneously, this fragmentation means the GPU can serve only 10-20 concurrent requests despite having enough memory for 100. The result: poor GPU utilization and high queuing latency." },
+      { heading: "PagedAttention: Virtual Memory for KV Cache", body: "PagedAttention divides the KV cache into fixed-size blocks (typically 16 tokens each). A block table maps each request's logical blocks to physical memory blocks — just like OS virtual memory page tables. Blocks are allocated on-demand as the sequence grows and freed immediately upon completion. This eliminates pre-allocation waste: a 100-token response uses only 7 blocks instead of 128 blocks. GPU utilization jumps from 20-30% to 60-80%." },
+      { heading: "Prefix Caching: Sharing System Prompts", body: "Many applications prepend the same system prompt (1,000-5,000 tokens) to every user message. Without prefix caching, each request recomputes the KV cache for this shared prefix — wasting computation and memory. Prefix caching stores the KV blocks for shared prefixes and reuses them across requests. For a 4,096-token system prompt, this saves ~60% of the TTFT (time-to-first-token) for every request. Anthropic exposes this as a pricing feature: cached input tokens cost 90% less." },
+      { heading: "Speculative Decoding: Draft + Verify", body: "LLM decoding is serial: one token per forward pass of the full model. Speculative decoding parallelizes this: a small draft model (e.g., 1B parameter model) generates K candidate tokens in K forward passes; the large target model verifies all K tokens in a single forward pass using tree attention. If the target model agrees with the draft's top-K tokens, all K are accepted atomically. For highly predictable outputs (code completion, structured responses), speculative decoding achieves 3-5x throughput improvement." },
+      { heading: "Continuous Batching and Scheduling", body: "vLLM's scheduler manages the block table and continuous batching together. When a new request arrives, the scheduler checks if there are free blocks for the prompt plus estimated completion. If GPU memory is tight, it can preempt (swap to CPU) low-priority requests. The iteration-level scheduler (run after every token) can add new requests to the batch whenever a sequence completes — maximizing GPU utilization without sacrificing latency for in-progress requests." },
+    ],
+    tradeoffs: {
+      pros: ["PagedAttention eliminates KV cache fragmentation, doubling or tripling GPU request concurrency", "Prefix caching reduces TTFT by 40-60% for applications with shared system prompts", "Speculative decoding provides 3-5x throughput improvement for predictable outputs", "Continuous batching maximizes GPU utilization across variable-length requests"],
+      cons: ["Block table management adds CPU overhead per token generated — problematic at very high throughputs", "Speculative decoding requires running two models simultaneously, consuming additional GPU memory and compute", "Prefix caching only helps when prompts are identical — slight variations break cache hits", "Preemption (swapping KV cache to CPU) adds significant latency to preempted requests"],
+    },
+    interviewQuestions: [
+      "Explain PagedAttention. How does it solve the KV cache memory fragmentation problem?",
+      "Design a KV cache management system for a serving cluster with 10 A100 GPUs running a 70B model.",
+      "How does prefix caching work? What applications benefit most, and how would you implement it?",
+      "Explain speculative decoding. What types of outputs benefit most, and when does it fail to provide speedup?",
+      "Compare vLLM continuous batching to static batching. Why is continuous batching strictly better for production LLM serving?",
+    ],
+    scalingNumbers: [
+      { label: "PagedAttn Throughput Gain", value: "2-4x vs. naive" },
+      { label: "Prefix Cache TTFT Savings", value: "40-60%" },
+      { label: "Speculative Decoding Gain", value: "3-5x throughput" },
+      { label: "GPU Utilization (vLLM)", value: "60-80%" },
+    ],
   },
   {
     id: 28,
@@ -993,11 +1585,11 @@ export const architectures: Architecture[] = [
       cons: ["Running two parallel retrieval pipelines doubles index storage and maintenance overhead", "Cross-encoder re-ranking adds 30–80ms latency, which may be unacceptable for real-time autocomplete scenarios", "HyDE query expansion requires an LLM call per query, adding 200–500ms latency and inference cost", "Tuning RRF constant k and the number of candidates per retriever requires empirical experimentation per domain"],
     },
     interviewQuestions: [
-      { question: "Design a search system that handles both exact keyword matches (product IDs, error codes) and semantic queries. How would you combine BM25 and vector search?", hint: "Discuss RRF for score-free rank fusion, and explain why normalizing BM25 and cosine similarity scores directly is fragile." },
-      { question: "Your hybrid search recall is good but latency is too high. Walk through optimization strategies at each stage of the pipeline.", hint: "Consider pre-filtering vs post-filtering, HNSW parameter tuning (ef_search), cross-encoder distillation, and caching frequent queries." },
-      { question: "Explain the tradeoff between bi-encoder and cross-encoder models for retrieval. Why not use cross-encoders everywhere?", hint: "Cross-encoders are O(N) per query (must score every doc), while bi-encoders enable O(log N) ANN search. Discuss the two-stage retrieval pattern." },
-      { question: "A user query is ambiguous — 'Python' could mean the language or the snake. How would you handle query disambiguation in a RAG pipeline?", hint: "Discuss HyDE for generating multiple hypothetical documents, multi-vector retrieval, and using the LLM to classify intent before retrieval." },
-      { question: "How would you evaluate and monitor a hybrid search system in production? What metrics matter beyond simple accuracy?", hint: "Cover NDCG@K, MRR, recall@K, latency percentiles, retrieval-augmented generation faithfulness, and A/B testing retrieval configurations." },
+      "Design a search system that handles both exact keyword matches (product IDs, error codes) and semantic queries. How would you combine BM25 and vector search?",
+      "Your hybrid search recall is good but latency is too high. Walk through optimization strategies at each stage of the pipeline.",
+      "Explain the tradeoff between bi-encoder and cross-encoder models for retrieval. Why not use cross-encoders everywhere?",
+      "A user query is ambiguous — 'Python' could mean the language or the snake. How would you handle query disambiguation in a RAG pipeline?",
+      "How would you evaluate and monitor a hybrid search system in production? What metrics matter beyond simple accuracy?",
     ],
   },
   {
@@ -1038,11 +1630,11 @@ export const architectures: Architecture[] = [
       cons: ["Overly aggressive safety filters produce false positives that block legitimate queries on sensitive topics", "Constitutional AI can make models excessively cautious, refusing edge-case queries that are actually benign", "Adversarial attacks evolve faster than defenses — novel jailbreaks regularly bypass existing classifiers", "PII detection has inherent recall/precision tradeoffs — high recall means more false positives disrupting user experience"],
     },
     interviewQuestions: [
-      { question: "Design a safety system for a customer-facing LLM chatbot. What layers of defense would you implement and in what order?", hint: "Discuss input classification, system prompt hardening, output filtering, rate limiting, human review queues, and the latency budget for each layer." },
-      { question: "How would you defend against indirect prompt injection — where malicious instructions are hidden in documents the LLM retrieves from the web?", hint: "Cover instruction hierarchy, content sandboxing, canary tokens, and the fundamental tension between tool-use capability and injection vulnerability." },
-      { question: "Explain the tradeoff between safety and helpfulness in LLM alignment. How do you minimize false positive refusals?", hint: "Discuss tiered safety thresholds, context-aware classifiers, Constitutional AI principle tuning, and measuring refusal rates on benign queries." },
-      { question: "Your LLM application must comply with GDPR. Design the PII handling pipeline for both input processing and output generation.", hint: "Cover input-side NER and redaction, output-side DLP scanning, differential privacy in training, audit logging, and user data deletion workflows." },
-      { question: "How would you set up continuous red-teaming for an LLM product? What attack categories would you test and how would you automate it?", hint: "Discuss automated adversarial prompt generation, GCG attacks, the red-team/blue-team cycle, regression testing after safety patches, and metric tracking." },
+      "Design a safety system for a customer-facing LLM chatbot. What layers of defense would you implement and in what order?",
+      "How would you defend against indirect prompt injection — where malicious instructions are hidden in documents the LLM retrieves from the web?",
+      "Explain the tradeoff between safety and helpfulness in LLM alignment. How do you minimize false positive refusals?",
+      "Your LLM application must comply with GDPR. Design the PII handling pipeline for both input processing and output generation.",
+      "How would you set up continuous red-teaming for an LLM product? What attack categories would you test and how would you automate it?",
     ],
   },
   {
@@ -1083,11 +1675,11 @@ export const architectures: Architecture[] = [
       cons: ["Tensor parallelism requires expensive NVLink interconnect — performance degrades severely over PCIe or network links", "Cold start times of 30–120 seconds make reactive autoscaling too slow for sudden traffic spikes", "Quantization quality loss is non-uniform across tasks — some downstream tasks degrade more than benchmarks suggest", "GPU infrastructure complexity (CUDA drivers, NCCL, model parallelism) creates a steep operational learning curve"],
     },
     interviewQuestions: [
-      { question: "Design an LLM serving system that handles 1,000 requests per second for a 70B parameter model. What hardware and software architecture would you use?", hint: "Calculate memory requirements, choose TP/PP strategy, discuss continuous batching with vLLM, and estimate the number of GPUs needed based on tokens/sec throughput." },
-      { question: "Explain the difference between tensor parallelism and pipeline parallelism. When would you use each, and what are the communication bottlenecks?", hint: "TP requires all-reduce per layer (needs NVLink), PP only passes activations between stages (works over network). Discuss pipeline bubbles and micro-batching." },
-      { question: "Your LLM serving costs are $500K/month. Walk through strategies to reduce costs by 50% without degrading user-perceived quality.", hint: "Cover quantization (4-bit), model tiering (small model for simple queries), spot instances, request caching, prompt compression, and speculative decoding." },
-      { question: "A 70B model takes 90 seconds to load. How would you design autoscaling to handle traffic spikes without users experiencing timeouts?", hint: "Discuss pre-warm pools, predictive scaling from traffic patterns, model sharding across NVMe for fast loading, and graceful degradation to smaller models." },
-      { question: "Compare vLLM, TensorRT-LLM, and Hugging Face TGI for production LLM serving. What are the key architectural differences?", hint: "vLLM pioneered PagedAttention and continuous batching. TensorRT-LLM compiles to optimized CUDA kernels. TGI integrates with HF ecosystem. Discuss throughput vs flexibility tradeoffs." },
+      "Design an LLM serving system that handles 1,000 requests per second for a 70B parameter model. What hardware and software architecture would you use?",
+      "Explain the difference between tensor parallelism and pipeline parallelism. When would you use each, and what are the communication bottlenecks?",
+      "Your LLM serving costs are $500K/month. Walk through strategies to reduce costs by 50% without degrading user-perceived quality.",
+      "A 70B model takes 90 seconds to load. How would you design autoscaling to handle traffic spikes without users experiencing timeouts?",
+      "Compare vLLM, TensorRT-LLM, and Hugging Face TGI for production LLM serving. What are the key architectural differences?",
     ],
   },
 ];
