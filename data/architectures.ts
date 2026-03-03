@@ -1713,30 +1713,22 @@ problem: "A transformer model with 70B parameters has weights totaling ~140GB in
       { title: "QLoRA: Efficient Finetuning of Quantized LLMs", authors: "Dettmers, T. et al.", year: 2023, url: "https://arxiv.org/abs/2305.14314" },
     ],
     diagramType: "training-pipeline",
-    mermaidDef: `graph TD
-    RawData[Raw Training Data] --> Curation[Data Curation\nFiltering & Dedup]
-    Curation --> Formatter[Instruction Formatter\nChat Template]
-    Formatter --> Tokenizer[Tokenizer\nPadding & Truncation]
-    subgraph "Training Infrastructure"
-        BaseModel[Base Model\nFrozen Weights]
-        LoRA[LoRA Adapters\nRank 16-64]
-        BaseModel --- LoRA
-        LoRA --> TrainLoop[Training Loop\nGradient Accumulation]
-        TrainLoop --> DeepSpeed[DeepSpeed ZeRO\nDistributed Training]
-    end
-    Tokenizer --> TrainLoop
-    subgraph "Evaluation & Deployment"
-        TrainLoop --> EvalHarness[Evaluation Harness\nMMLU / HumanEval]
-        EvalHarness --> Merge[Adapter Merge\nLoRA into Base]
-        Merge --> Quantize[GPTQ/AWQ\nQuantization]
-        Quantize --> Deploy[Model Registry\nDeploy to Serving]
-    end
-    DPO[DPO / RLHF\nPreference Alignment] --> TrainLoop
-    style RawData fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style LoRA fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style TrainLoop fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style EvalHarness fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
-    howItWorks: `① Raw data (instruction-response pairs, domain documents, human feedback) is curated — filtering low-quality examples, deduplicating near-duplicates, and balancing categories → ② Data is formatted into the model's chat template (e.g., ChatML) with system/user/assistant roles → ③ Tokenizer encodes text into token IDs with padding/truncation to max sequence length → ④ Base model weights are frozen; LoRA injects small trainable adapter matrices (rank 16–64) into attention layers — reducing trainable parameters by 10,000× → ⑤ QLoRA variant quantizes base model to 4-bit NormalFloat while training adapters in BF16, enabling 65B fine-tuning on a single 48GB GPU → ⑥ Training loop runs with gradient accumulation across micro-batches; DeepSpeed ZeRO shards optimizer states across GPUs for multi-node training → ⑦ DPO (Direct Preference Optimization) or RLHF aligns the model with human preferences using chosen/rejected response pairs → ⑧ Evaluation harness benchmarks the fine-tuned model on standard tasks (MMLU, HumanEval, domain-specific evals) → ⑨ LoRA adapters are merged back into the base model weights → ⑩ Merged model is quantized (GPTQ/AWQ to 4-bit) and deployed to the serving infrastructure`,
+    mermaidDef: `graph LR
+  RD[Raw Data] --> DC[Data Curator]
+  DC -->|dedup + quality filter| TD[Training Dataset]
+  subgraph Training
+    BM[Base Model - frozen] --> LA[LoRA Adapters]
+    LA --> FSDP[FSDP / DeepSpeed]
+  end
+  TD --> Training
+  Training --> CP[Checkpoint]
+  CP --> EB[Eval Benchmarks]
+  EB --> MM[Merged Model]
+  MM --> DEP[Deployment]
+  style DC fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style FSDP fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style EB fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: "① Raw data collected and filtered → ② Curator deduplicates and quality-scores → ③ LoRA adapters initialized on frozen base → ④ Distributed training via FSDP/DeepSpeed → ⑤ Validation loss monitored with early stopping → ⑥ Eval on benchmarks before deployment",
     videoWeek: 13,
 
   
@@ -1784,36 +1776,24 @@ problem: "A transformer model with 70B parameters has weights totaling ~140GB in
       { title: "Efficient Memory Management for Large Language Model Serving with PagedAttention", authors: "Kwon, W. et al. (vLLM)", year: 2023, url: "https://arxiv.org/abs/2309.06180" },
     ],
     diagramType: "kv-cache",
-    mermaidDef: `graph TD
-    Request[Incoming Request\nSystem + User Prompt] --> PrefixMatch[Prefix Matcher\nRadix Tree Lookup]
-    PrefixMatch -->|Cache Hit| ReuseKV[Reuse Cached KV Blocks\nSkip Prefill for Prefix]
-    PrefixMatch -->|Cache Miss| FullPrefill[Full Prefill\nCompute All KV Pairs]
-    subgraph "PagedAttention KV Store"
-        BlockAlloc[Block Allocator\nVirtual Memory Pages]
-        PhysBlocks[Physical KV Blocks\nGPU HBM]
-        BlockTable[Block Table\nLogical-to-Physical Map]
-        BlockAlloc --> PhysBlocks
-        BlockAlloc --> BlockTable
-    end
-    ReuseKV --> BlockAlloc
-    FullPrefill --> BlockAlloc
-    subgraph "Decode Loop"
-        Decode[Autoregressive Decode\nOne Token per Step]
-        Decode -->|Append KV| PhysBlocks
-        Decode --> Speculative[Speculative Decoding\nDraft Model Predicts N]
-        Speculative -->|Verify Batch| Decode
-    end
-    PhysBlocks --> Decode
-    subgraph "Eviction Policy"
-        LRU[LRU Eviction\nPrefix Popularity]
-        PhysBlocks -->|Memory Pressure| LRU
-        LRU -->|Evict Cold Blocks| PhysBlocks
-    end
-    style Request fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style PrefixMatch fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style BlockAlloc fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style Decode fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
-    howItWorks: `① Incoming request with system prompt + user message arrives at the inference server → ② Radix tree-based prefix matcher checks if the system prompt (or any prefix) has been seen before and its KV cache blocks are still in GPU memory → ③ On cache hit, the cached KV blocks are reused — prefill computation is skipped for the matched prefix, saving significant GPU compute (especially for long system prompts shared across users) → ④ On cache miss, full prefill runs: all prompt tokens are processed through the transformer stack to compute K and V tensors for every layer → ⑤ PagedAttention allocates KV cache in fixed-size blocks (like OS virtual memory pages) via a block allocator — no pre-allocation of max sequence length, eliminating internal fragmentation → ⑥ Block table maps logical KV positions to physical GPU HBM addresses, enabling non-contiguous memory storage → ⑦ During autoregressive decoding, each new token's KV pair is appended to the next available block; new blocks are allocated on demand → ⑧ Speculative decoding uses a small draft model to predict N tokens ahead, then the main model verifies all N in a single forward pass — accepting correct predictions for free → ⑨ When GPU memory is full, LRU eviction removes the least recently used prefix cache blocks, prioritizing frequently reused system prompts`,
+    mermaidDef: `graph LR
+  REQ[Request] --> PH[Prefix Hash]
+  PH --> RT[Radix Tree Cache]
+  subgraph Cache Hit
+    LKV[Load KV Tensors] --> SP[Skip Prefill]
+  end
+  subgraph Cache Miss
+    FP[Full Prefill] --> STR[Store in Radix Tree]
+  end
+  RT -->|hit| Cache Hit
+  RT -->|miss| Cache Miss
+  Cache Hit --> PA[PagedAttention]
+  Cache Miss --> PA
+  PA --> DEC[Decode] --> RES[Response]
+  style RT fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style PA fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style LKV fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: "① Request arrives with system prompt and query → ② Prefix hash computed for system prompt → ③ Radix tree checked for cached prefix → ④ Cache hit reloads KV tensors, skips prefill → ⑤ Cache miss runs full prefill, stores KV → ⑥ PagedAttention allocates pages, LRU evicts cold entries",
     videoWeek: 14,
 
   
@@ -1861,29 +1841,24 @@ problem: "A transformer model with 70B parameters has weights totaling ~140GB in
       { title: "Precise Zero-Shot Dense Retrieval without Relevance Labels (HyDE)", authors: "Gao, L. et al.", year: 2022, url: "https://arxiv.org/abs/2212.10496" },
     ],
     diagramType: "hybrid-search",
-    mermaidDef: `graph TD
-    Query[User Query] --> HyDE[HyDE Generator\nLLM Hypothetical Doc]
-    Query --> BM25[BM25 Search\nInverted Index]
-    HyDE --> DenseEnc[Dense Bi-Encoder\nEmbedding Model]
-    Query --> DenseEnc
-    subgraph "Parallel Retrieval"
-        BM25 --> BM25Results[BM25 Ranked List]
-        DenseEnc --> ANNSearch[HNSW ANN Search]
-        ANNSearch --> DenseResults[Dense Ranked List]
-    end
-    subgraph "Fusion & Reranking"
-        BM25Results --> RRF[Reciprocal Rank Fusion\nRRF k=60]
-        DenseResults --> RRF
-        RRF --> TopCandidates[Top-50 Candidates]
-        TopCandidates --> CrossEncoder[Cross-Encoder\nReranker]
-        CrossEncoder --> FinalResults[Final Top-10\nResults]
-    end
-    FinalResults --> LLM[LLM Generator\nRAG Context]
-    style Query fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style RRF fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style CrossEncoder fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style HyDE fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
-    howItWorks: `① User query arrives at the hybrid search pipeline → ② (Optional) HyDE step: LLM generates a hypothetical document that would answer the query — this synthetic text is embedded alongside the original query for better retrieval of semantically related content → ③ BM25 path: query terms are looked up in the inverted index, scoring documents by term frequency, inverse document frequency, and length normalization → ④ Dense path: query (and optional HyDE doc) is encoded by a bi-encoder embedding model, then HNSW ANN search retrieves top-K nearest vectors from the dense index → ⑤ Both ranked lists feed into Reciprocal Rank Fusion — RRF_score(d) = Σ 1/(k + rank_i(d)) where k=60, combining rankings without needing score normalization → ⑥ Top-50 fused candidates are passed to a cross-encoder reranker, which processes each (query, document) pair through a single transformer for deep token-level interaction scoring → ⑦ Cross-encoder reorders candidates by relevance, producing the final top-10 results with significantly higher NDCG@10 than either retriever alone → ⑧ Final results are injected as context into the LLM prompt for grounded answer generation`,
+    mermaidDef: `graph LR
+  Q[Query] --> BM25[BM25 Inverted Index]
+  Q --> DE[Dense Embedder]
+  DE --> VDB[Vector DB]
+  subgraph Parallel Retrieval
+    BM25
+    VDB
+  end
+  BM25 --> RRF[RRF Fusion]
+  VDB --> RRF
+  RRF --> CER[Cross-Encoder Reranker]
+  CER --> TOP[Top-5 Documents]
+  TOP --> LLM[LLM Context]
+  LLM --> ANS[Answer]
+  style RRF fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style CER fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style LLM fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: "① Query arrives for retrieval → ② BM25 sparse and dense embedding search run in parallel → ③ RRF fusion combines rankings without score normalization → ④ Cross-encoder reranks top-20 with full attention → ⑤ HyDE optionally generates hypothetical answer for recall → ⑥ Top-5 results passed to LLM as context",
     videoWeek: 14,
 
     problem: "Pure dense vector search misses exact keyword matches (product IDs, error codes, acronyms) while BM25 keyword search misses semantic paraphrases and intent. In production RAG pipelines, using either approach alone yields 15–30% lower recall than users expect. The challenge is fusing heterogeneous ranking signals — sparse lexical scores and dense cosine similarities operate on entirely different scales — without requiring expensive labeled training data.",
@@ -1930,31 +1905,23 @@ problem: "A transformer model with 70B parameters has weights totaling ~140GB in
       { title: "Constitutional AI: Harmlessness from AI Feedback", authors: "Bai, Y. et al. (Anthropic)", year: 2022, url: "https://arxiv.org/abs/2212.08073" },
     ],
     diagramType: "safety",
-    mermaidDef: `graph TD
-    UserInput[User Input] --> InputClassifier[Input Classifier\nPrompt Injection Detection]
-    InputClassifier --> PIIDetector[PII Detector\nNER + Regex]
-    PIIDetector -->|Redact PII| SanitizedInput[Sanitized Prompt]
-    subgraph "Aligned Model"
-        SanitizedInput --> LLM[LLM\nConstitutional AI + RLHF]
-        Constitution[Constitution\n15-20 Principles] -->|Training-Time Alignment| LLM
-        RLHF[Reward Model\nHuman Preferences] -->|RL Fine-Tuning| LLM
-    end
-    LLM --> OutputClassifier[Output Classifier\nToxicity + Harm]
-    OutputClassifier --> HallucinationCheck[Hallucination Detector\nNLI Verification]
-    HallucinationCheck -->|Pass| Response[Safe Response]
-    HallucinationCheck -->|Fail| HumanQueue[Human Review Queue]
-    OutputClassifier -->|Flagged| HumanQueue
-    subgraph "Red Team Loop"
-        RedTeam[Red Team\nAdversarial Attacks]
-        RedTeam -->|Probe| InputClassifier
-        RedTeam -->|Update Rules| OutputClassifier
-        RedTeam -->|Retrain| RLHF
-    end
-    style UserInput fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style LLM fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style InputClassifier fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style OutputClassifier fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
-    howItWorks: `① User input arrives and is immediately screened by an input classifier (fine-tuned DeBERTa) that detects prompt injections, jailbreak attempts, and malicious instruction patterns with 95–99% recall → ② PII detector (NER model + regex patterns) identifies and redacts personally identifiable information (emails, SSNs, phone numbers) before the prompt reaches the model → ③ Sanitized prompt is processed by the LLM, which has been aligned during training via Constitutional AI (self-critique against 15–20 written principles) and RLHF (reward model trained on human preference labels) → ④ Generated output passes through an output classifier that scores for toxicity, violence, hate speech, and dangerous content across multiple harm categories → ⑤ Hallucination detector uses NLI (Natural Language Inference) to verify each claim against source documents, flagging unsupported assertions → ⑥ Clean responses are delivered to the user; flagged outputs are routed to a human review queue for manual assessment → ⑦ Continuous red-team loop: adversarial testers probe the system with novel attack vectors (GCG suffixes, multi-turn manipulation, indirect injection via retrieved docs), updating classifier rules and retraining alignment as new vulnerabilities are found`,
+    mermaidDef: `graph LR
+  UP[User Prompt] --> IC[Input Classifier]
+  subgraph Safe Path
+    LLM[LLM Generation] --> OC[Output Classifier]
+    OC --> CAI[Constitutional AI Critique]
+  end
+  subgraph Block Path
+    REJ[Rejected + Logged]
+  end
+  IC -->|safe| Safe Path
+  IC -->|harmful| Block Path
+  CAI --> SR[Safe Response]
+  SR --> RLHF[RLHF Feedback Loop]
+  style IC fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style OC fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style CAI fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: "① User prompt arrives at input classifier → ② Classifier screens for harmful content and jailbreaks → ③ Blocked prompts rejected with logged reason → ④ Safe prompts proceed to LLM generation → ⑤ Output classifier checks for policy violations → ⑥ Constitutional AI self-critique returns safe response",
     videoWeek: 15,
 
     problem: "Production LLM applications face adversarial prompt injections, jailbreaks that bypass safety training, hallucinated outputs presented as fact, and PII/sensitive data leakage. No single safety mechanism is reliable — RLHF-aligned models can still be manipulated with sophisticated multi-turn attacks, and output classifiers have both false positive and false negative rates that degrade user experience or miss harmful content.",
@@ -2001,36 +1968,24 @@ problem: "A transformer model with 70B parameters has weights totaling ~140GB in
       { title: "Orca: A Distributed Serving System for Transformer-Based Generative Models", authors: "Yu, G. et al.", year: 2022, url: "https://www.usenix.org/conference/osdi22/presentation/yu" },
     ],
     diagramType: "serving",
-    mermaidDef: `graph TD
-    Request[Client Request] --> LB[Load Balancer\nL7 Routing]
-    subgraph "Triton Inference Server"
-        LB --> Batcher[Continuous Batcher\nIteration-Level Scheduling]
-        Batcher --> Scheduler[Request Scheduler\nPriority Queue]
-    end
-    subgraph "GPU Cluster (Tensor Parallel)"
-        Scheduler --> GPU0[GPU 0\nTP Shard Layers 0-N]
-        Scheduler --> GPU1[GPU 1\nTP Shard Layers 0-N]
-        Scheduler --> GPU2[GPU 2\nPP Stage 2]
-        GPU0 <-->|AllReduce NVLink| GPU1
-        GPU1 -->|Activations InfiniBand| GPU2
-    end
-    subgraph "Memory Subsystem"
-        GPU0 --> KVCache[PagedAttention\nKV Cache Blocks]
-        Quantized[GPTQ/AWQ 4-bit\nModel Weights] --> GPU0
-        Quantized --> GPU1
-    end
-    GPU2 --> Streamer[Token Streamer\nSSE / gRPC Stream]
-    Streamer --> Response[Client Response]
-    subgraph "Autoscaler"
-        Metrics[GPU Util + Queue Depth\nCustom Metrics] --> HPA[Kubernetes HPA\nScale GPU Pods]
-        HPA --> PreWarm[Pre-Warm Pool\nStandby Pods with Model Loaded]
-    end
-    Scheduler --> Metrics
-    style Request fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style Batcher fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style GPU0 fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
-    style KVCache fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
-    howItWorks: `① Client request hits the L7 load balancer, which routes based on model name and available capacity → ② Triton Inference Server's continuous batcher collects incoming requests and inserts them into the active batch at iteration granularity — when a request finishes (EOS), a new request immediately takes its slot with zero GPU idle time → ③ Request scheduler manages a priority queue, balancing batch size against available GPU memory (each active request's KV cache grows with sequence length) → ④ Model weights (quantized to 4-bit via GPTQ or AWQ for 75% memory reduction) are loaded from HBM; tensor parallelism shards each layer's weight matrices across GPUs within a node, synchronized via AllReduce over NVLink → ⑤ Pipeline parallelism splits the model by layer groups across nodes — GPU 0–1 handle early layers (TP), GPU 2+ handle later layers (PP), with activation tensors passed between stages over InfiniBand → ⑥ PagedAttention manages KV cache as dynamically allocated memory pages — no pre-allocation waste, enabling 2–4× more concurrent requests per GPU → ⑦ Generated tokens stream back to the client via SSE or gRPC streaming for low time-to-first-token → ⑧ Autoscaler monitors GPU utilization, request queue depth, and tokens/sec throughput; Kubernetes HPA scales GPU pods, with pre-warm pools keeping standby replicas (model pre-loaded) to avoid 30–120s cold start latency`,
+    mermaidDef: `graph LR
+  REQ[Request] --> LB[Load Balancer]
+  LB --> MR[Model Registry]
+  subgraph Prefill Fleet
+    HCG[High-Compute GPUs] --> TP[Tensor Parallel]
+  end
+  MR --> Prefill Fleet
+  Prefill Fleet --> KV[KV Cache Transfer]
+  subgraph Decode Fleet
+    HMG[High-Memory GPUs] --> ARD[Autoregressive Decode]
+  end
+  KV --> Decode Fleet
+  Decode Fleet --> TS[Token Stream] --> CLI[Client]
+  CLI --> AS[Autoscaler]
+  style LB fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style TP fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0
+  style ARD fill:#1e3a5f,stroke:#3b82f6,color:#e2e8f0`,
+    howItWorks: "① Request hits load balancer and model registry → ② Prefill fleet processes prompt on high-compute GPUs → ③ KV cache transferred to decode fleet → ④ Decode fleet generates tokens autoregressively → ⑤ Tensor parallelism splits model across GPUs → ⑥ Tokens streamed back, autoscaler adjusts fleet size",
     videoWeek: 15,
 
     problem: "Serving large language models at production scale faces extreme resource constraints: a 70B parameter model requires 140GB of GPU memory in FP16, far exceeding a single GPU's capacity. Naive request handling wastes GPU compute — sequential processing leaves the GPU idle during memory-bound decoding, and fixed batch sizes either underutilize hardware or add unacceptable latency. Autoscaling GPU infrastructure is 10–100× more expensive than CPU, making cost optimization critical.",
