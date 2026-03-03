@@ -14,6 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 import ArchDiagram from "@/components/architecture/ArchDiagram";
+import MermaidDiagram from "@/components/architecture/MermaidDiagram";
 import ArchCard from "@/components/architecture/ArchCard";
 import {
   architectures,
@@ -193,15 +194,55 @@ export default async function ArchitectureDetailPage({
           </div>
         </div>
 
+        {/* ── Request Journey ────────────────────────────────────────── */}
+        {arch.howItWorks && (
+          <div className="bg-slate-800/30 border border-slate-700/30 rounded-xl p-4 mb-8">
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-3 font-semibold">Request Journey</p>
+            <div className="flex flex-wrap gap-2 items-center">
+              {arch.howItWorks.split('→').slice(0, 5).map((step, i, arr) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="bg-slate-700/60 text-slate-300 text-xs px-3 py-1.5 rounded-full border border-slate-600/40 max-w-[160px] truncate" title={step.trim()}>
+                    {step.trim().replace(/^[①②③④⑤⑥⑦⑧⑨]\s*/, '')}
+                  </span>
+                  {i < arr.length - 1 && <span className="text-slate-600 text-xs">→</span>}
+                </div>
+              ))}
+              {arch.howItWorks.split('→').length > 5 && (
+                <span className="text-slate-600 text-xs">+{arch.howItWorks.split('→').length - 5} more steps</span>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* ── Description ──────────────────────────────────────────── */}
         <section>
           <h2 className="text-xl font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
             <Zap className={`w-5 h-5 ${accentText}`} />
             How It Works
           </h2>
-          <p className="text-[var(--text-secondary)] leading-relaxed text-base">
-            {arch.description}
-          </p>
+          {arch.howItWorks ? (
+            <div className="space-y-0">
+              {arch.howItWorks.split('→').map((step, i, steps) => (
+                <div key={i} className="flex gap-4 group">
+                  <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400 font-bold text-sm flex-shrink-0">
+                      {i + 1}
+                    </div>
+                    {i < steps.length - 1 && (
+                      <div className="w-px h-6 bg-blue-500/20 my-1" />
+                    )}
+                  </div>
+                  <div className="pb-4 pt-1">
+                    <p className="text-slate-300 text-sm leading-relaxed">{step.trim()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[var(--text-secondary)] leading-relaxed text-base">
+              {arch.description}
+            </p>
+          )}
         </section>
 
         {/* ── Problem ──────────────────────────────────────────────── */}
@@ -257,19 +298,16 @@ export default async function ArchitectureDetailPage({
             </h2>
             <div className="space-y-6">
               {arch.deepDive.map((section, i) => (
-                <div key={i} className="arch-card p-6">
-                  <div className="flex items-start gap-4">
-                    <span className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${accentBg} ${accentText} border ${accentBorder}`}>
-                      {i + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] mb-3 leading-snug">
-                        {section.heading}
-                      </h3>
-                      <p className="text-[var(--text-secondary)] leading-relaxed text-sm sm:text-base">
-                        {section.body}
-                      </p>
+                <div key={i} className="relative bg-slate-800/40 border border-slate-700/50 rounded-xl p-6 hover:border-slate-600/50 transition-colors">
+                  <div className={`absolute left-0 top-6 bottom-6 w-1 rounded-full ${accentBg.replace('/10', '')}`} />
+                  <div className="pl-4">
+                    <div className="flex items-start gap-3 mb-3">
+                      <span className={`w-7 h-7 rounded-lg ${accentBg} ${accentText} flex items-center justify-center font-bold text-xs flex-shrink-0`}>
+                        {i + 1}
+                      </span>
+                      <h3 className="text-white font-semibold text-base leading-tight">{section.heading}</h3>
                     </div>
+                    <p className="text-slate-300 text-sm leading-relaxed">{section.body}</p>
                   </div>
                 </div>
               ))}
@@ -287,7 +325,11 @@ export default async function ArchitectureDetailPage({
             <div className="relative bg-[var(--bg-primary)] border-b border-[var(--border)] p-8 h-64 sm:h-80 flex items-center justify-center">
               <div className="absolute inset-0 grid-bg opacity-40" />
               <div className="relative z-10 w-full h-full">
-                <ArchDiagram type={arch.diagramType} category={arch.category} large />
+                {arch.mermaidDef ? (
+                  <MermaidDiagram definition={arch.mermaidDef} id={arch.slug} />
+                ) : (
+                  <ArchDiagram type={arch.diagramType} category={arch.category} large />
+                )}
               </div>
             </div>
             <div className="px-5 py-3 bg-[var(--bg-card)]">
@@ -326,6 +368,7 @@ export default async function ArchitectureDetailPage({
               <span className={accentText}>⚖</span>
               Tradeoffs & Design Decisions
             </h2>
+            <p className="text-slate-400 text-sm mb-6">Every architectural decision is a tradeoff. Here&apos;s what you gain and what you give up.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-5">
                 <p className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-3">✓ Strengths</p>
@@ -362,6 +405,9 @@ export default async function ArchitectureDetailPage({
                 FAANG Interview Questions
               </h2>
               <span className="badge badge-purple">Interview Prep</span>
+            </div>
+            <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-lg p-4 mb-6">
+              <p className="text-yellow-300/80 text-sm">💡 These questions appear in FAANG system design rounds. Focus on <strong>tradeoffs</strong>, not just what the system does.</p>
             </div>
             <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-6">
               <p className="text-xs text-[var(--text-muted)] mb-4 italic">

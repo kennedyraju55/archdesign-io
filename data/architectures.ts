@@ -33,6 +33,8 @@ export interface Architecture {
   tradeoffs?: { pros: string[]; cons: string[] };
   interviewQuestions?: (string | { question: string; hint: string })[];
   scalingNumbers?: { label: string; value: string }[];
+  mermaidDef?: string;
+  howItWorks?: string;
 }
 
 export const architectures: Architecture[] = [
