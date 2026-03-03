@@ -368,14 +368,23 @@ export default async function ArchitectureDetailPage({
                 These are real system design interview questions asked at Google, Meta, Amazon, Apple, Netflix, and Microsoft. Study the architecture above before attempting.
               </p>
               <ol className="space-y-4">
-                {arch.interviewQuestions.map((q, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <span className="shrink-0 w-7 h-7 rounded-lg bg-yellow-500/15 border border-yellow-500/30 text-yellow-400 text-xs font-bold flex items-center justify-center mt-0.5">
-                      Q{i + 1}
-                    </span>
-                    <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">{q}</p>
-                  </li>
-                ))}
+                {arch.interviewQuestions.map((q, i) => {
+                  const question = typeof q === "string" ? q : q.question;
+                  const hint = typeof q === "string" ? null : q.hint;
+                  return (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="shrink-0 w-7 h-7 rounded-lg bg-yellow-500/15 border border-yellow-500/30 text-yellow-400 text-xs font-bold flex items-center justify-center mt-0.5">
+                        Q{i + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">{question}</p>
+                        {hint && (
+                          <p className="text-xs text-[var(--text-muted)] mt-1 italic">💡 Hint: {hint}</p>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
               </ol>
             </div>
           </section>
