@@ -1290,7 +1290,7 @@ export const architectures: Architecture[] = [
   subgraph "Multi-Device Delivery"
     NOTIFY[Delta Notify\nLong-poll or SSE stream]
     D2([Device 2\nReceive and apply delta])
-    D3([Device 3\nPhone or tablet)]
+    D3([Device 3\nPhone or tablet])
   end
   FS -->|Detect change event| CHUNK
   CHUNK -->|Hash each 4MB block| HASH
