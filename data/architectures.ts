@@ -1,4 +1,4 @@
-export type Difficulty = "Beginner" | "Intermediate" | "Advanced" | "Expert";
+﻿export type Difficulty = "Beginner" | "Intermediate" | "Advanced" | "Expert";
 export type Category = "Distributed Systems" | "Data & Infrastructure" | "LLM & AI Systems";
 
 export interface ResearchPaper {
@@ -48,7 +48,7 @@ export const architectures: Architecture[] = [
     difficulty: "Advanced",
     companies: ["Netflix", "Disney+", "Hulu"],
     description:
-      "Netflix built Open Connect ΓÇö its own global CDN with 17,000+ servers embedded in ISP networks worldwide. Combined with adaptive bitrate streaming (DASH/HLS), consistent hashing for cache distribution, and a chaos engineering culture, Netflix achieves 99.99% availability while streaming 15% of global internet traffic.",
+      "Netflix built Open Connect  its own global CDN with 17,000+ servers embedded in ISP networks worldwide. Combined with adaptive bitrate streaming (DASH/HLS), consistent hashing for cache distribution, and a chaos engineering culture, Netflix achieves 99.99% availability while streaming 15% of global internet traffic.",
     keyInsight:
       "Moving bytes close to users (edge servers in ISPs) is always cheaper and faster than building bigger datacenters.",
     concepts: ["CDN", "Consistent Hashing", "Adaptive Bitrate Streaming", "Chaos Engineering", "Edge Caching", "Zuul API Gateway"],
@@ -115,7 +115,7 @@ export const architectures: Architecture[] = [
     difficulty: "Advanced",
     companies: ["X (Twitter)", "Instagram", "LinkedIn"],
     description:
-      "Twitter's timeline problem: when Katy Perry tweets, 100M followers need to see it in milliseconds. The naive approach ΓÇö query all followed users on every load ΓÇö doesn't scale. Twitter uses a hybrid fan-out strategy: pre-compute timelines for most users via write-time fan-out (push), but pull on read for celebrities with 10M+ followers.",
+      "Twitter's timeline problem: when Katy Perry tweets, 100M followers need to see it in milliseconds. The naive approach  query all followed users on every load  doesn't scale. Twitter uses a hybrid fan-out strategy: pre-compute timelines for most users via write-time fan-out (push), but pull on read for celebrities with 10M+ followers.",
     keyInsight:
       "The celebrity problem: uniform push fan-out breaks for accounts with extreme follower counts. Hybrid models win.",
     concepts: ["Fan-out on Write", "Fan-out on Read", "Redis Sorted Sets", "Finagle RPC", "FlockDB", "Snowflake IDs"],
@@ -185,7 +185,7 @@ export const architectures: Architecture[] = [
     difficulty: "Expert",
     companies: ["Uber", "Lyft", "DoorDash"],
     description:
-      "Uber needs to match millions of riders and drivers in real-time across 70+ countries. The system uses H3 ΓÇö Uber's open-source hexagonal hierarchical geospatial indexing ΓÇö to partition the globe into cells. Kafka streams GPS updates, a demand/supply model computes surge pricing per cell, and a dispatch system solves the assignment problem in under 100ms.",
+      "Uber needs to match millions of riders and drivers in real-time across 70+ countries. The system uses H3  Uber's open-source hexagonal hierarchical geospatial indexing  to partition the globe into cells. Kafka streams GPS updates, a demand/supply model computes surge pricing per cell, and a dispatch system solves the assignment problem in under 100ms.",
     keyInsight:
       "Hexagonal grids have equal-distance neighbors (unlike squares), making them ideal for proximity queries.",
     concepts: ["H3 Hexagonal Grid", "Apache Kafka", "Geofencing", "Supply/Demand Modeling", "Real-time Dispatch", "DISCO"],
@@ -253,9 +253,9 @@ export const architectures: Architecture[] = [
     difficulty: "Expert",
     companies: ["WhatsApp", "Telegram", "Signal"],
     description:
-      "WhatsApp handled 100 billion messages per day with only 50 engineers ΓÇö perhaps the highest messages-per-engineer ratio ever. The secret: Erlang/Mnesia (a distributed database built for telecom), XMPP protocol, message store-and-forward with delivery ACKs, and aggressive horizontal scaling with minimal operational complexity.",
+      "WhatsApp handled 100 billion messages per day with only 50 engineers  perhaps the highest messages-per-engineer ratio ever. The secret: Erlang/Mnesia (a distributed database built for telecom), XMPP protocol, message store-and-forward with delivery ACKs, and aggressive horizontal scaling with minimal operational complexity.",
     keyInsight:
-      "Erlang was designed for telecom fault tolerance ΓÇö 9 nines reliability ΓÇö making it perfect for messaging.",
+      "Erlang was designed for telecom fault tolerance  9 nines reliability  making it perfect for messaging.",
     concepts: ["Erlang/BEAM", "Mnesia DB", "XMPP Protocol", "ACK Chains", "Store-and-Forward", "FreeBSD Tuning"],
     papers: [],
     diagramType: "messaging",
@@ -322,9 +322,9 @@ export const architectures: Architecture[] = [
     difficulty: "Expert",
     companies: ["Google", "Bing", "Yandex"],
     description:
-      "Google's search infrastructure processes 8.5 billion searches/day powered by petabytes of indexed data. The pipeline: Googlebot crawls the web ΓåÆ Bigtable stores raw crawl data ΓåÆ MapReduce builds the inverted index ΓåÆ Percolator enables real-time incremental updates ΓåÆ Spanner provides globally-consistent storage ΓåÆ Serving layer queries thousands of machines in parallel under 200ms.",
+      "Google's search infrastructure processes 8.5 billion searches/day powered by petabytes of indexed data. The pipeline: Googlebot crawls the web  Bigtable stores raw crawl data  MapReduce builds the inverted index  Percolator enables real-time incremental updates  Spanner provides globally-consistent storage  Serving layer queries thousands of machines in parallel under 200ms.",
     keyInsight:
-      "Inverted indexes trade write complexity for read performance ΓÇö you pay the cost at index time, not query time.",
+      "Inverted indexes trade write complexity for read performance  you pay the cost at index time, not query time.",
     concepts: ["Inverted Index", "MapReduce", "Bigtable", "Percolator", "PageRank", "Spanner", "Crawl Frontier"],
     papers: [
       { title: "Bigtable: A Distributed Storage System for Structured Data", authors: "Chang, F. et al. (Google)", year: 2006, url: "https://static.googleusercontent.com/media/research.google.com/en//archive/bigtable-osdi06.pdf" },
@@ -391,9 +391,9 @@ export const architectures: Architecture[] = [
     difficulty: "Expert",
     companies: ["Amazon", "LinkedIn", "Cassandra (inspired)"],
     description:
-      "DynamoDB was born from Amazon's 2007 Dynamo paper ΓÇö a landmark in distributed systems. It uses consistent hashing to partition data across nodes, virtual nodes for load balancing, gossip protocol for cluster state, vector clocks for conflict detection, and tunable consistency (eventual vs strong). The paper introduced foundational tradeoffs that influenced Cassandra, Riak, and countless distributed databases.",
+      "DynamoDB was born from Amazon's 2007 Dynamo paper  a landmark in distributed systems. It uses consistent hashing to partition data across nodes, virtual nodes for load balancing, gossip protocol for cluster state, vector clocks for conflict detection, and tunable consistency (eventual vs strong). The paper introduced foundational tradeoffs that influenced Cassandra, Riak, and countless distributed databases.",
     keyInsight:
-      "The CAP theorem isn't binary ΓÇö systems like DynamoDB let you tune where on the consistency-availability spectrum to operate per operation.",
+      "The CAP theorem isn't binary  systems like DynamoDB let you tune where on the consistency-availability spectrum to operate per operation.",
     concepts: ["Consistent Hashing", "Virtual Nodes", "Gossip Protocol", "Vector Clocks", "Quorum Reads/Writes", "Merkle Trees", "Tunable Consistency"],
     papers: [
       { title: "Dynamo: Amazon's Highly Available Key-value Store", authors: "DeCandia, G. et al. (Amazon)", year: 2007, url: "https://dl.acm.org/doi/10.1145/1294261.1294281" },
@@ -456,9 +456,9 @@ export const architectures: Architecture[] = [
     difficulty: "Advanced",
     companies: ["YouTube", "Vimeo", "TikTok"],
     description:
-      "500 hours of video are uploaded to YouTube every minute. The processing pipeline: raw upload ΓåÆ chunked blob storage ΓåÆ transcoding workers (VP9/H.264/AV1 at 8+ resolutions/bitrates) ΓåÆ thumbnail generation ΓåÆ copyright detection (Content ID) ΓåÆ CDN distribution ΓåÆ recommendation indexing. All parallelized with a distributed task queue.",
+      "500 hours of video are uploaded to YouTube every minute. The processing pipeline: raw upload  chunked blob storage  transcoding workers (VP9/H.264/AV1 at 8+ resolutions/bitrates)  thumbnail generation  copyright detection (Content ID)  CDN distribution  recommendation indexing. All parallelized with a distributed task queue.",
     keyInsight:
-      "Transcoding is embarrassingly parallel ΓÇö splitting video into segments and processing independently is 100├ù faster than sequential processing.",
+      "Transcoding is embarrassingly parallel  splitting video into segments and processing independently is 100 faster than sequential processing.",
     concepts: ["Blob Storage", "Transcoding Pipeline", "CDN Distribution", "Content ID Fingerprinting", "Adaptive Bitrate", "Distributed Task Queue"],
     papers: [],
     diagramType: "pipeline",
@@ -591,9 +591,9 @@ export const architectures: Architecture[] = [
     difficulty: "Advanced",
     companies: ["Stripe", "Braintree", "Adyen"],
     description:
-      "Payment systems require exactly-once semantics ΓÇö charging a card twice is catastrophic. Stripe uses idempotency keys (client-generated UUIDs) to deduplicate requests, event sourcing to maintain an immutable audit log, double-entry bookkeeping for financial accuracy, and distributed sagas for multi-step transactions (auth ΓåÆ capture ΓåÆ settle).",
+      "Payment systems require exactly-once semantics  charging a card twice is catastrophic. Stripe uses idempotency keys (client-generated UUIDs) to deduplicate requests, event sourcing to maintain an immutable audit log, double-entry bookkeeping for financial accuracy, and distributed sagas for multi-step transactions (auth  capture  settle).",
     keyInsight:
-      "Idempotency is non-negotiable in payments ΓÇö network retries happen, and you must guarantee the operation executes exactly once.",
+      "Idempotency is non-negotiable in payments  network retries happen, and you must guarantee the operation executes exactly once.",
     concepts: ["Idempotency Keys", "Event Sourcing", "CQRS", "Distributed Sagas", "Double-Entry Ledger", "Webhook Fan-out"],
     papers: [],
     diagramType: "payment",
@@ -656,10 +656,10 @@ export const architectures: Architecture[] = [
     difficulty: "Advanced",
     companies: ["Discord", "Slack", "Teams"],
     description:
-      "Discord's engineering journey is a masterclass in re-architecture. Started with Python/Mongo ΓåÆ migrated to Elixir (for massive WebSocket concurrency via the BEAM VM) ΓåÆ migrated hot storage from Cassandra to ScyllaDB (Rust-based, 10├ù faster at same cost). WebSocket connections are managed by Elixir's GenServer processes ΓÇö millions of long-lived connections with minimal memory.",
+      "Discord's engineering journey is a masterclass in re-architecture. Started with Python/Mongo  migrated to Elixir (for massive WebSocket concurrency via the BEAM VM)  migrated hot storage from Cassandra to ScyllaDB (Rust-based, 10 faster at same cost). WebSocket connections are managed by Elixir's GenServer processes  millions of long-lived connections with minimal memory.",
     keyInsight:
       "Erlang/BEAM's actor model makes it possible to hold millions of WebSocket connections with microsecond message passing.",
-    concepts: ["WebSockets", "Elixir/Phoenix", "Actor Model", "Cassandra ΓåÆ ScyllaDB Migration", "Presence System", "Voice (WebRTC)"],
+    concepts: ["WebSockets", "Elixir/Phoenix", "Actor Model", "Cassandra  ScyllaDB Migration", "Presence System", "Voice (WebRTC)"],
     papers: [
       { title: "How Discord Stores Billions of Messages", authors: "Discord Engineering", year: 2023, url: "https://discord.com/blog/how-discord-stores-billions-of-messages" },
     ],
@@ -724,9 +724,9 @@ export const architectures: Architecture[] = [
     difficulty: "Advanced",
     companies: ["Spotify", "Apple Music", "YouTube Music"],
     description:
-      "Spotify's recommendation pipeline combines three signals: collaborative filtering (users who listen to X also like Y), NLP on playlist names and music blogs, and raw audio CNNs that analyze the audio itself. The Discover Weekly playlist is generated weekly via a massive offline MapReduce ΓåÆ neural embedding ΓåÆ nearest-neighbor lookup pipeline.",
+      "Spotify's recommendation pipeline combines three signals: collaborative filtering (users who listen to X also like Y), NLP on playlist names and music blogs, and raw audio CNNs that analyze the audio itself. The Discover Weekly playlist is generated weekly via a massive offline MapReduce  neural embedding  nearest-neighbor lookup pipeline.",
     keyInsight:
-      "The best recommendation signal isn't user ratings ΓÇö it's implicit feedback (plays, skips, saves) at massive scale.",
+      "The best recommendation signal isn't user ratings  it's implicit feedback (plays, skips, saves) at massive scale.",
     concepts: ["Collaborative Filtering", "Matrix Factorization", "Word2Vec", "Audio CNNs", "A/B Testing", "Apache Spark"],
     papers: [
       { title: "Deep Learning for Audio-based Music Classification and Tagging", authors: "Nam, J. et al.", year: 2018 },
@@ -785,7 +785,7 @@ export const architectures: Architecture[] = [
     description:
       "When you push a commit, GitHub triggers a cascade: webhook fan-out to all registered CI apps, status checks API updates each commit, check suites aggregate test results, and merge queues prevent broken main branches. Git's content-addressable storage (SHA-1 blobs/trees/commits) enables efficient delta compression and distributed storage.",
     keyInsight:
-      "Git is a content-addressable filesystem ΓÇö every object is identified by its SHA-1 hash, making deduplication and integrity verification trivial.",
+      "Git is a content-addressable filesystem  every object is identified by its SHA-1 hash, making deduplication and integrity verification trivial.",
     concepts: ["Git DAG", "Webhook Fan-out", "Check Suites API", "Merge Queues", "Pack Files", "GitHub Actions"],
     papers: [],
     diagramType: "cicd",
@@ -839,7 +839,7 @@ export const architectures: Architecture[] = [
     difficulty: "Advanced",
     companies: ["LinkedIn", "Facebook", "Twitter"],
     description:
-      "LinkedIn's feed serves personalized content to 1B members. The ranking pipeline: candidate generation (retrieve top-K relevant posts per user) ΓåÆ lightweight filter (remove spam/low-quality) ΓåÆ heavyweight ML scoring (gradient boosted trees + neural nets on 1000+ features) ΓåÆ diversity injection ΓåÆ real-time feature serving. Feature store enables sub-5ms feature lookup.",
+      "LinkedIn's feed serves personalized content to 1B members. The ranking pipeline: candidate generation (retrieve top-K relevant posts per user)  lightweight filter (remove spam/low-quality)  heavyweight ML scoring (gradient boosted trees + neural nets on 1000+ features)  diversity injection  real-time feature serving. Feature store enables sub-5ms feature lookup.",
     keyInsight:
       "Two-tower ranking models separate retrieval (speed) from scoring (accuracy), making billion-scale personalization feasible.",
     concepts: ["Two-Tower Model", "Feature Store", "Candidate Retrieval", "GBDTs", "Online/Offline Features", "Diversity Injection"],
@@ -897,9 +897,9 @@ export const architectures: Architecture[] = [
     difficulty: "Advanced",
     companies: ["Dropbox", "Google Drive", "OneDrive"],
     description:
-      "Dropbox splits files into content-addressed blocks (SHA-256 of each 4MB chunk). Only changed blocks are uploaded ΓÇö if you edit a large Word doc, only the changed blocks sync. The metadata server tracks which blocks belong to which file. Conflict resolution follows 'last-write wins' with a copy of the conflicted file preserved. A local desktop daemon monitors filesystem events for changes.",
+      "Dropbox splits files into content-addressed blocks (SHA-256 of each 4MB chunk). Only changed blocks are uploaded  if you edit a large Word doc, only the changed blocks sync. The metadata server tracks which blocks belong to which file. Conflict resolution follows 'last-write wins' with a copy of the conflicted file preserved. A local desktop daemon monitors filesystem events for changes.",
     keyInsight:
-      "Content-addressable storage means identical blocks across different files are stored once ΓÇö massive deduplication at scale.",
+      "Content-addressable storage means identical blocks across different files are stored once  massive deduplication at scale.",
     concepts: ["Content-Addressable Storage", "Delta Sync", "Block Chunking", "Conflict Resolution", "LAN Sync", "Metadata Server"],
     papers: [],
     diagramType: "sync",
@@ -947,15 +947,15 @@ export const architectures: Architecture[] = [
   {
     id: 15,
     slug: "facebook-social-graph-tao",
-    title: "Facebook Social Graph ΓÇö TAO",
+    title: "Facebook Social Graph  TAO",
     subtitle: "The Associations & Objects model powering 2B people",
     category: "Data & Infrastructure",
     difficulty: "Expert",
     companies: ["Meta/Facebook", "Twitter", "LinkedIn"],
     description:
-      "Facebook's social graph stores billions of objects (users, posts, photos) and associations (friend-of, likes, tagged-in) in TAO ΓÇö a geographically distributed cache+DB system purpose-built for social graph access patterns. TAO provides eventual consistency with read-after-write consistency within a region via a tiered cache hierarchy (leader + follower caches).",
+      "Facebook's social graph stores billions of objects (users, posts, photos) and associations (friend-of, likes, tagged-in) in TAO  a geographically distributed cache+DB system purpose-built for social graph access patterns. TAO provides eventual consistency with read-after-write consistency within a region via a tiered cache hierarchy (leader + follower caches).",
     keyInsight:
-      "Social graphs have extremely skewed access patterns ΓÇö the top 1% of objects get 99% of reads, so tiered caching is essential.",
+      "Social graphs have extremely skewed access patterns  the top 1% of objects get 99% of reads, so tiered caching is essential.",
     concepts: ["Graph Data Model", "Objects & Associations", "TAO Cache", "Eventual Consistency", "Shard Assignment", "MySQL + Memcached"],
     papers: [
       { title: "TAO: Facebook's Distributed Data Store for the Social Graph", authors: "Bronson, N. et al. (Facebook)", year: 2013, url: "https://www.usenix.org/conference/atc13/technical-sessions/presentation/bronson" },
@@ -1088,7 +1088,7 @@ export const architectures: Architecture[] = [
     difficulty: "Advanced",
     companies: ["LinkedIn", "Confluent", "Uber", "Airbnb"],
     description:
-      "Kafka is a distributed commit log designed for high-throughput event streaming. Topics are split into partitions (ordered, immutable logs), replicated across brokers. Consumer groups enable parallel consumption with exactly-once semantics via transactional APIs. Log compaction retains only the latest value per key ΓÇö enabling Kafka as a database. KRaft mode replaces ZooKeeper for metadata management.",
+      "Kafka is a distributed commit log designed for high-throughput event streaming. Topics are split into partitions (ordered, immutable logs), replicated across brokers. Consumer groups enable parallel consumption with exactly-once semantics via transactional APIs. Log compaction retains only the latest value per key  enabling Kafka as a database. KRaft mode replaces ZooKeeper for metadata management.",
     keyInsight:
       "Kafka's breakthrough: treating a message queue as an immutable log makes it replayable, auditable, and orders of magnitude more scalable.",
     concepts: ["Partitions & Offsets", "Consumer Groups", "Log Compaction", "Exactly-Once Semantics", "KRaft", "Stream Processing"],
@@ -1170,9 +1170,9 @@ export const architectures: Architecture[] = [
     difficulty: "Advanced",
     companies: ["Google", "AWS EKS", "Azure AKS"],
     description:
-      "Kubernetes is a declarative container orchestrator built from Google's Borg. Control plane: API server (REST gateway) ΓåÆ etcd (distributed state store) ΓåÆ Scheduler (bin-packing pods onto nodes) ΓåÆ Controller Manager (reconciliation loops). Data plane: kubelet (node agent), kube-proxy (iptables/IPVS networking), CRI (container runtime). All state lives in etcd; controllers continuously reconcile desired ΓåÆ actual state.",
+      "Kubernetes is a declarative container orchestrator built from Google's Borg. Control plane: API server (REST gateway)  etcd (distributed state store)  Scheduler (bin-packing pods onto nodes)  Controller Manager (reconciliation loops). Data plane: kubelet (node agent), kube-proxy (iptables/IPVS networking), CRI (container runtime). All state lives in etcd; controllers continuously reconcile desired  actual state.",
     keyInsight:
-      "Kubernetes' key abstraction: controllers watch for 'desired state Γëá actual state' and take action ΓÇö this declarative model makes the system self-healing.",
+      "Kubernetes' key abstraction: controllers watch for 'desired state Γëá actual state' and take action  this declarative model makes the system self-healing.",
     concepts: ["etcd", "Reconciliation Loops", "Pod Scheduling", "kube-proxy", "Service Mesh (Istio)", "CRDs"],
     papers: [],
     diagramType: "k8s",
@@ -1242,9 +1242,9 @@ export const architectures: Architecture[] = [
     difficulty: "Advanced",
     companies: ["PostgreSQL", "CockroachDB", "Supabase"],
     description:
-      "PostgreSQL's MVCC keeps multiple versions of each row ΓÇö readers never block writers. Every transaction sees a snapshot of the database as of its start time. Old row versions are cleaned by VACUUM. The WAL (Write-Ahead Log) records every change before applying it to data pages ΓÇö enabling crash recovery, streaming replication, and point-in-time recovery. Logical replication decodes WAL changes into row events for downstream consumers.",
+      "PostgreSQL's MVCC keeps multiple versions of each row  readers never block writers. Every transaction sees a snapshot of the database as of its start time. Old row versions are cleaned by VACUUM. The WAL (Write-Ahead Log) records every change before applying it to data pages  enabling crash recovery, streaming replication, and point-in-time recovery. Logical replication decodes WAL changes into row events for downstream consumers.",
     keyInsight:
-      "MVCC's trade-off: reads are blazing fast (no locks), but VACUUM must periodically reclaim dead row versions ΓÇö invisible maintenance cost.",
+      "MVCC's trade-off: reads are blazing fast (no locks), but VACUUM must periodically reclaim dead row versions  invisible maintenance cost.",
     concepts: ["MVCC", "Write-Ahead Log", "VACUUM", "Transaction Isolation Levels", "Streaming Replication", "Logical Replication"],
     papers: [],
     diagramType: "database",
@@ -1312,7 +1312,7 @@ export const architectures: Architecture[] = [
     difficulty: "Advanced",
     companies: ["Cloudflare", "Fastly", "AWS Lambda@Edge"],
     description:
-      "Cloudflare operates 300+ PoPs globally, all addressable via anycast BGP ΓÇö requests automatically route to the nearest datacenter. Workers run JavaScript in V8 isolates (not containers/VMs) ΓÇö cold start is <1ms because isolates share the V8 heap. Workers KV provides eventually-consistent global key-value storage. Durable Objects add stateful actors with strong consistency per object.",
+      "Cloudflare operates 300+ PoPs globally, all addressable via anycast BGP  requests automatically route to the nearest datacenter. Workers run JavaScript in V8 isolates (not containers/VMs)  cold start is <1ms because isolates share the V8 heap. Workers KV provides eventually-consistent global key-value storage. Durable Objects add stateful actors with strong consistency per object.",
     keyInsight:
       "V8 isolates vs containers: isolates start in microseconds (shared process, separate heap), containers start in milliseconds (separate process). Orders of magnitude difference.",
     concepts: ["Anycast BGP", "V8 Isolates", "Workers KV", "Durable Objects", "Service Workers", "Edge-side Rendering"],
@@ -1379,9 +1379,9 @@ export const architectures: Architecture[] = [
     difficulty: "Expert",
     companies: ["OpenAI", "Anthropic", "Google DeepMind"],
     description:
-      "Serving a large language model efficiently requires solving multiple engineering challenges simultaneously: KV cache (avoid recomputing attention over the prompt on every token), FlashAttention (IO-aware attention reducing memory bandwidth bottleneck 3├ù), quantization (INT8/INT4 weights for 2-4├ù memory reduction), continuous batching (serving multiple requests with different sequence lengths in one forward pass), and tensor parallelism across multiple GPUs.",
+      "Serving a large language model efficiently requires solving multiple engineering challenges simultaneously: KV cache (avoid recomputing attention over the prompt on every token), FlashAttention (IO-aware attention reducing memory bandwidth bottleneck 3), quantization (INT8/INT4 weights for 2-4 memory reduction), continuous batching (serving multiple requests with different sequence lengths in one forward pass), and tensor parallelism across multiple GPUs.",
     keyInsight:
-      "LLM inference is memory-bandwidth bound, not compute-bound ΓÇö moving weights from GPU HBM to registers is the bottleneck, not the matrix multiplications.",
+      "LLM inference is memory-bandwidth bound, not compute-bound  moving weights from GPU HBM to registers is the bottleneck, not the matrix multiplications.",
     concepts: ["KV Cache", "FlashAttention", "Quantization (INT8/INT4)", "Continuous Batching", "Tensor Parallelism", "Speculative Decoding"],
     papers: [
       { title: "Attention Is All You Need", authors: "Vaswani, A. et al.", year: 2017, url: "https://arxiv.org/abs/1706.03762" },
@@ -1443,14 +1443,14 @@ export const architectures: Architecture[] = [
     id: 22,
     slug: "rag-pipeline-architecture",
     title: "RAG Pipeline Architecture",
-    subtitle: "Retrieval-Augmented Generation ΓÇö from PDF to production",
+    subtitle: "Retrieval-Augmented Generation  from PDF to production",
     category: "LLM & AI Systems",
     difficulty: "Advanced",
     companies: ["OpenAI", "LangChain", "Cohere", "Perplexity"],
     description:
-      "RAG augments LLM generation with retrieved context, solving hallucination and knowledge cutoff problems. The pipeline: document ingestion (parse ΓåÆ chunk ΓåÆ embed ΓåÆ store in vector DB) ΓåÆ retrieval (encode query ΓåÆ ANN search ΓåÆ re-rank ΓåÆ inject context) ΓåÆ generation (LLM with retrieved context in prompt). Production RAG requires: chunking strategy tuning, hybrid retrieval (dense + sparse BM25 fusion), re-ranking (cross-encoder), and hallucination evaluation.",
+      "RAG augments LLM generation with retrieved context, solving hallucination and knowledge cutoff problems. The pipeline: document ingestion (parse  chunk  embed  store in vector DB)  retrieval (encode query  ANN search  re-rank  inject context)  generation (LLM with retrieved context in prompt). Production RAG requires: chunking strategy tuning, hybrid retrieval (dense + sparse BM25 fusion), re-ranking (cross-encoder), and hallucination evaluation.",
     keyInsight:
-      "Chunk size is RAG's most critical hyperparameter ΓÇö too small loses context, too large dilutes relevance signal.",
+      "Chunk size is RAG's most critical hyperparameter  too small loses context, too large dilutes relevance signal.",
     concepts: ["Document Chunking", "Text Embeddings", "Vector Search (ANN)", "BM25 Sparse Retrieval", "Reciprocal Rank Fusion", "Re-ranking"],
     papers: [
       { title: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks", authors: "Lewis, P. et al. (Facebook AI)", year: 2020, url: "https://arxiv.org/abs/2005.11401" },
@@ -1522,7 +1522,7 @@ export const architectures: Architecture[] = [
     description:
       "Vector databases store high-dimensional embeddings (1536-dim for text, 512-dim for images) and answer approximate nearest neighbor (ANN) queries. HNSW (Hierarchical Navigable Small World) builds a multi-layer graph index for sub-millisecond search. IVF (Inverted File Index) clusters vectors for scalable search. Production concerns: index build time, recall vs latency tradeoffs, filtering on metadata, and sharding across machines.",
     keyInsight:
-      "HNSW's 'small world' property: any vector is reachable from any other vector in O(log N) hops ΓÇö inspired by social network theory.",
+      "HNSW's 'small world' property: any vector is reachable from any other vector in O(log N) hops  inspired by social network theory.",
     concepts: ["HNSW Index", "IVF Index", "ANN Search", "Recall vs Latency", "Filtered Search", "Quantization (PQ/SQ)"],
     papers: [
       { title: "Efficient and Robust Approximate Nearest Neighbor Search Using HNSW", authors: "Malkov, Y.A. & Yashunin, D.A.", year: 2018, url: "https://arxiv.org/abs/1603.09320" },
@@ -1594,9 +1594,9 @@ export const architectures: Architecture[] = [
     difficulty: "Advanced",
     companies: ["OpenAI", "Anthropic", "Azure OpenAI", "LiteLLM"],
     description:
-      "As organizations adopt multiple LLM providers, an API gateway becomes essential. It handles: token-based rate limiting (not request-based ΓÇö LLMs charge by token), cost tracking per team/user, intelligent routing (cheapest model that meets quality threshold), fallback chains (if GPT-4 is down, route to Claude), prompt caching (identical prompts return cached responses), and semantic caching (similar prompts return cached responses).",
+      "As organizations adopt multiple LLM providers, an API gateway becomes essential. It handles: token-based rate limiting (not request-based  LLMs charge by token), cost tracking per team/user, intelligent routing (cheapest model that meets quality threshold), fallback chains (if GPT-4 is down, route to Claude), prompt caching (identical prompts return cached responses), and semantic caching (similar prompts return cached responses).",
     keyInsight:
-      "LLM rate limits are in tokens/minute, not requests/minute ΓÇö a token bucket algorithm with separate limits for input/output tokens is required.",
+      "LLM rate limits are in tokens/minute, not requests/minute  a token bucket algorithm with separate limits for input/output tokens is required.",
     concepts: ["Token Bucket Rate Limiting", "Semantic Caching", "Model Routing", "Cost Attribution", "Fallback Chains", "Prompt Management"],
     papers: [],
     diagramType: "gateway",
@@ -1664,9 +1664,9 @@ export const architectures: Architecture[] = [
     difficulty: "Expert",
     companies: ["Anthropic", "OpenAI", "Microsoft AutoGen", "LangChain"],
     description:
-      "Multi-agent systems decompose complex tasks across specialized LLM agents. LangGraph models agent workflows as directed cyclic graphs ΓÇö agents can loop, branch, and call tools. Key patterns: ReAct (Reason+Act loop), Planner-Executor (planning agent generates steps, executor agents run them), Critic (one agent reviews another's output). Memory systems: short-term (conversation history), long-term (vector DB), episodic (past task records).",
+      "Multi-agent systems decompose complex tasks across specialized LLM agents. LangGraph models agent workflows as directed cyclic graphs  agents can loop, branch, and call tools. Key patterns: ReAct (Reason+Act loop), Planner-Executor (planning agent generates steps, executor agents run them), Critic (one agent reviews another's output). Memory systems: short-term (conversation history), long-term (vector DB), episodic (past task records).",
     keyInsight:
-      "The hardest problem in multi-agent systems isn't intelligence ΓÇö it's reliability. Agents need structured output, retry logic, and human checkpoints.",
+      "The hardest problem in multi-agent systems isn't intelligence  it's reliability. Agents need structured output, retry logic, and human checkpoints.",
     concepts: ["ReAct Pattern", "LangGraph", "Tool Use / Function Calling", "Agent Memory Systems", "Human-in-the-Loop", "Structured Outputs"],
     papers: [
       { title: "ReAct: Synergizing Reasoning and Acting in Language Models", authors: "Yao, S. et al.", year: 2022, url: "https://arxiv.org/abs/2210.03629" },
@@ -1739,7 +1739,7 @@ export const architectures: Architecture[] = [
     difficulty: "Expert",
     companies: ["Hugging Face", "Mistral", "Meta (Llama)"],
     description:
-      "Fine-tuning adapts a pre-trained LLM to a specific domain or task. LoRA (Low-Rank Adaptation) freezes the base model and adds small trainable adapter matrices ΓÇö reduces trainable parameters by 10,000├ù. QLoRA quantizes the base model to 4-bit while training adapters in 16-bit ΓÇö enables fine-tuning a 65B model on a single 48GB GPU. DPO (Direct Preference Optimization) replaces RLHF's reward model with a simpler contrastive objective.",
+      "Fine-tuning adapts a pre-trained LLM to a specific domain or task. LoRA (Low-Rank Adaptation) freezes the base model and adds small trainable adapter matrices  reduces trainable parameters by 10,000. QLoRA quantizes the base model to 4-bit while training adapters in 16-bit  enables fine-tuning a 65B model on a single 48GB GPU. DPO (Direct Preference Optimization) replaces RLHF's reward model with a simpler contrastive objective.",
     keyInsight:
       "LoRA exploits the 'intrinsic dimensionality' hypothesis: fine-tuning changes exist in a low-dimensional subspace of the full weight space.",
     concepts: ["LoRA Adapters", "QLoRA (4-bit)", "Supervised Fine-Tuning", "DPO vs RLHF", "Evaluation Harness", "PEFT"],
@@ -1811,9 +1811,9 @@ export const architectures: Architecture[] = [
     difficulty: "Expert",
     companies: ["vLLM", "TensorRT-LLM", "Anthropic"],
     description:
-      "The KV (key-value) cache stores computed attention states so tokens aren't reprocessed. In a naive implementation, each request has its own KV cache that wastes GPU memory on the max sequence length. PagedAttention (from vLLM) manages KV cache like virtual memory pages ΓÇö dramatically increasing GPU utilization. Prefix caching reuses KV cache for shared prompt prefixes across requests (e.g., a system prompt used by all users). Speculative decoding uses a small draft model to predict multiple tokens, then verifies in parallel.",
+      "The KV (key-value) cache stores computed attention states so tokens aren't reprocessed. In a naive implementation, each request has its own KV cache that wastes GPU memory on the max sequence length. PagedAttention (from vLLM) manages KV cache like virtual memory pages  dramatically increasing GPU utilization. Prefix caching reuses KV cache for shared prompt prefixes across requests (e.g., a system prompt used by all users). Speculative decoding uses a small draft model to predict multiple tokens, then verifies in parallel.",
     keyInsight:
-      "PagedAttention solved the fragmentation problem: KV cache blocks are allocated like memory pages, eliminating internal fragmentation and enabling 2-4├ù throughput improvement.",
+      "PagedAttention solved the fragmentation problem: KV cache blocks are allocated like memory pages, eliminating internal fragmentation and enabling 2-4 throughput improvement.",
     concepts: ["KV Cache", "PagedAttention", "Prefix Caching", "Speculative Decoding", "Continuous Batching", "GPU Memory Management"],
     papers: [
       { title: "Efficient Memory Management for Large Language Model Serving with PagedAttention", authors: "Kwon, W. et al. (vLLM)", year: 2023, url: "https://arxiv.org/abs/2309.06180" },
@@ -1887,7 +1887,7 @@ export const architectures: Architecture[] = [
     difficulty: "Advanced",
     companies: ["Elasticsearch", "Weaviate", "Cohere", "Perplexity"],
     description:
-      "Neither dense vector search nor keyword search (BM25) alone is optimal. Dense search finds semantically similar content but misses exact keyword matches; BM25 finds exact matches but misses paraphrases. Hybrid search combines both: run parallel dense + sparse retrievals, fuse with Reciprocal Rank Fusion (RRF), then apply a cross-encoder re-ranker for final ordering. Query expansion (HyDE ΓÇö generate a hypothetical answer, embed it for better retrieval) further boosts recall.",
+      "Neither dense vector search nor keyword search (BM25) alone is optimal. Dense search finds semantically similar content but misses exact keyword matches; BM25 finds exact matches but misses paraphrases. Hybrid search combines both: run parallel dense + sparse retrievals, fuse with Reciprocal Rank Fusion (RRF), then apply a cross-encoder re-ranker for final ordering. Query expansion (HyDE  generate a hypothetical answer, embed it for better retrieval) further boosts recall.",
     keyInsight:
       "Reciprocal Rank Fusion is surprisingly effective: fusing rankings from BM25 and vector search with RRF outperforms either alone with no training required.",
     concepts: ["BM25 (TF-IDF)", "Dense Vector Search", "Reciprocal Rank Fusion", "Cross-Encoder Re-ranking", "HyDE", "Query Expansion"],
@@ -2028,7 +2028,7 @@ export const architectures: Architecture[] = [
     description:
       "Serving LLMs at scale involves multi-layer infrastructure: model parallelism (tensor parallel across GPUs, pipeline parallel across nodes), dynamic batching via continuous batching schedulers, model quantization (GPTQ/AWQ for 4-bit), NVIDIA Triton Inference Server for multi-model deployments, Kubernetes HPA for GPU node autoscaling, and cost optimization via spot instances + model tiering (expensive models for complex queries, cheap models for simple ones).",
     keyInsight:
-      "The key to LLM serving efficiency is maximizing GPU Memory Bandwidth Utilization (MBU) ΓÇö packing as many tokens/sec through the GPU's HBM as possible.",
+      "The key to LLM serving efficiency is maximizing GPU Memory Bandwidth Utilization (MBU)  packing as many tokens/sec through the GPU's HBM as possible.",
     concepts: ["Tensor Parallelism", "Pipeline Parallelism", "Continuous Batching", "GPTQ/AWQ Quantization", "Triton Server", "GPU Autoscaling"],
     papers: [
       { title: "Orca: A Distributed Serving System for Transformer-Based Generative Models", authors: "Yu, G. et al.", year: 2022, url: "https://www.usenix.org/conference/osdi22/presentation/yu" },
