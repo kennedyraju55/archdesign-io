@@ -35,7 +35,7 @@ export default function MermaidDiagram({ definition, id }: MermaidDiagramProps) 
           mainBkg: '#1e293b',
           nodeTextColor: '#e2e8f0',
         },
-        flowchart: { curve: 'basis', padding: 20, useMaxWidth: true },
+        flowchart: { curve: 'basis', padding: 30, useMaxWidth: false },
         securityLevel: 'loose',
       });
 
@@ -47,9 +47,13 @@ export default function MermaidDiagram({ definition, id }: MermaidDiagramProps) 
             // Make SVG responsive
             const svgEl = ref.current.querySelector('svg');
             if (svgEl) {
+              svgEl.removeAttribute('style');
+              svgEl.removeAttribute('width');
+              svgEl.removeAttribute('height');
               svgEl.style.width = '100%';
               svgEl.style.height = 'auto';
-              svgEl.style.maxHeight = '420px';
+              svgEl.style.minHeight = '500px';
+              svgEl.style.display = 'block';
             }
           }
         } catch (e) {
@@ -66,7 +70,7 @@ export default function MermaidDiagram({ definition, id }: MermaidDiagramProps) 
   return (
     <div
       ref={ref}
-      className="w-full flex items-center justify-center min-h-[200px] p-4"
+      className="w-full overflow-x-auto min-h-[500px] p-4"
     />
   );
 }

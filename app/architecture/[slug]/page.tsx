@@ -322,9 +322,9 @@ export default async function ArchitectureDetailPage({
             Architecture Diagram
           </h2>
           <div className="arch-card overflow-hidden">
-            <div className="relative bg-[var(--bg-primary)] border-b border-[var(--border)] p-8 h-64 sm:h-80 flex items-center justify-center">
+            <div className="relative bg-[var(--bg-primary)] border-b border-[var(--border)] p-4">
               <div className="absolute inset-0 grid-bg opacity-40" />
-              <div className="relative z-10 w-full h-full">
+              <div className="relative z-10 w-full">
                 {arch.mermaidDef ? (
                   <MermaidDiagram definition={arch.mermaidDef} id={arch.slug} />
                 ) : (
