@@ -140,14 +140,15 @@ export default async function EpisodePage({
                 </div>
               </div>
               {/* Lock overlay */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#111827]/80">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#111827]/80 px-4 text-center">
                 <Lock className="w-6 h-6 text-[#64748b]" />
-                <p className="text-sm text-[#94a3b8]">Premium episode</p>
+                <p className="text-sm font-semibold text-[#f1f5f9]">This episode is for subscribers only</p>
+                <p className="text-xs text-[#64748b]">🎧 Preview: first 30 seconds free — subscribe to hear the full episode</p>
                 <Link
                   href="/subscribe"
                   className="px-5 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-sm font-semibold hover:opacity-90 transition-opacity"
                 >
-                  Subscribe to unlock — $9/month
+                  Subscribe for $9/month
                 </Link>
               </div>
             </div>

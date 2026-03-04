@@ -37,6 +37,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <link rel="alternate" type="application/rss+xml" title="ArchDesign Podcast" href="/podcast.xml" />
+      </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-[#0a0f1e] text-[#f1f5f9]`}>
         <Navbar />
         <main>{children}</main>
