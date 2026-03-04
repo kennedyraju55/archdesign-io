@@ -27,6 +27,9 @@ export default function Navbar() {
             <Link href="/architectures" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
               Architectures
             </Link>
+            <Link href="/podcast" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+              Podcast
+            </Link>
             <Link href="/#how-it-works" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
               How it Works
             </Link>
@@ -60,6 +63,9 @@ export default function Navbar() {
           <div className="px-4 py-4 space-y-3">
             <Link href="/architectures" className="block text-sm text-[var(--text-secondary)] hover:text-white py-2" onClick={() => setOpen(false)}>
               Architectures
+            </Link>
+            <Link href="/podcast" className="block text-sm text-[var(--text-secondary)] hover:text-white py-2" onClick={() => setOpen(false)}>
+              Podcast
             </Link>
             <Link href="/#how-it-works" className="block text-sm text-[var(--text-secondary)] hover:text-white py-2" onClick={() => setOpen(false)}>
               How it Works

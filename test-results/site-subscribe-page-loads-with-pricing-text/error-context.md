@@ -1,0 +1,106 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - link "ArchDesign.io" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e7]
+        - generic [ref=e9]: ArchDesign.io
+      - generic [ref=e10]:
+        - link "Architectures" [ref=e11] [cursor=pointer]:
+          - /url: /architectures
+        - link "How it Works" [ref=e12] [cursor=pointer]:
+          - /url: /#how-it-works
+      - link "🔔 Get Notified" [ref=e14] [cursor=pointer]:
+        - /url: /coming-soon
+  - main [ref=e15]:
+    - main [ref=e16]:
+      - generic [ref=e18]:
+        - generic [ref=e19]: Video Series
+        - heading "Something Exciting is Coming" [level=1] [ref=e20]
+        - paragraph [ref=e21]: We're recording free 40-minute video walkthroughs for every one of our 30 architecture deep-dives. No paywall. No subscription. Completely free.
+      - generic [ref=e23]:
+        - heading "Get notified when videos launch" [level=2] [ref=e24]
+        - paragraph [ref=e25]: No spam. One email when the videos go live.
+        - generic [ref=e26]:
+          - generic [ref=e27]: Your email address
+          - textbox "you@example.com" [ref=e28]
+        - button "Notify Me When Videos Launch" [disabled] [ref=e29]
+        - paragraph [ref=e30]: Free forever - No credit card - No commitment
+      - generic [ref=e31]:
+        - heading "What's in each video" [level=2] [ref=e32]
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - img [ref=e36]
+            - paragraph [ref=e39]: 40-min video deep-dives
+            - paragraph [ref=e40]: One per architecture -- live diagram annotation included
+          - generic [ref=e41]:
+            - img [ref=e43]
+            - paragraph [ref=e45]: FAANG interview Q&A
+            - paragraph [ref=e46]: 5 real questions mapped to each architecture
+          - generic [ref=e47]:
+            - img [ref=e49]
+            - paragraph [ref=e51]: Capacity estimation walkthroughs
+            - paragraph [ref=e52]: Real production numbers, not textbook examples
+      - generic [ref=e54]:
+        - paragraph [ref=e55]: While you wait
+        - heading "All 30 architecture articles are free right now" [level=3] [ref=e56]
+        - paragraph [ref=e57]: No login. No paywall. Just deep-dives into real systems.
+        - link "Browse Free Architectures" [ref=e58] [cursor=pointer]:
+          - /url: /architectures
+          - text: Browse Free Architectures
+          - img [ref=e59]
+  - contentinfo [ref=e61]:
+    - generic [ref=e62]:
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - link "ArchDesign.io" [ref=e65] [cursor=pointer]:
+            - /url: /
+            - img [ref=e67]
+            - generic [ref=e69]: ArchDesign.io
+          - paragraph [ref=e70]: 30 real-world system architecture deep-dives for CS students. From Netflix CDN to GPT inference — understand how the systems you use every day actually work.
+          - paragraph [ref=e71]: Built by Raju Guthikonda · Software Engineer @ Microsoft
+          - generic [ref=e72]:
+            - link [ref=e73] [cursor=pointer]:
+              - /url: https://twitter.com
+              - img [ref=e74]
+            - link [ref=e76] [cursor=pointer]:
+              - /url: https://github.com/kennedyraju55
+              - img [ref=e77]
+            - link [ref=e80] [cursor=pointer]:
+              - /url: https://www.linkedin.com/in/nrk-raju-guthikonda-504066a8/
+              - img [ref=e81]
+        - generic [ref=e85]:
+          - heading "Content" [level=4] [ref=e86]
+          - list [ref=e87]:
+            - listitem [ref=e88]:
+              - link "All Architectures" [ref=e89] [cursor=pointer]:
+                - /url: /architectures
+            - listitem [ref=e90]:
+              - link "Distributed Systems" [ref=e91] [cursor=pointer]:
+                - /url: /architectures?cat=distributed
+            - listitem [ref=e92]:
+              - link "LLM & AI Systems" [ref=e93] [cursor=pointer]:
+                - /url: /architectures?cat=llm
+            - listitem [ref=e94]:
+              - link "Data & Infrastructure" [ref=e95] [cursor=pointer]:
+                - /url: /architectures?cat=data
+        - generic [ref=e96]:
+          - heading "Videos" [level=4] [ref=e97]
+          - list [ref=e98]:
+            - listitem [ref=e99]:
+              - link "Videos Coming Soon" [ref=e100] [cursor=pointer]:
+                - /url: /coming-soon
+            - listitem [ref=e101]:
+              - link "How It Works" [ref=e102] [cursor=pointer]:
+                - /url: /#how-it-works
+            - listitem [ref=e103]:
+              - link "FAQ" [ref=e104] [cursor=pointer]:
+                - /url: /#faq
+      - generic [ref=e105]:
+        - paragraph [ref=e106]: © 2025 ArchDesign.io · Built by Raju Guthikonda · Microsoft Engineer
+        - paragraph [ref=e107]: 2 new architectures/week · 30 deep-dives · 15 weeks of content
+  - alert [ref=e108]
+```
