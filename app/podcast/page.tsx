@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Play, Lock, Mic, Clock, Layers, Sparkles } from "lucide-react";
+import { Play, Mic, Clock, Layers, Sparkles } from "lucide-react";
 import {
   PODCAST_EPISODES,
   CATEGORY_LABELS,
@@ -151,11 +151,6 @@ export default function PodcastPage() {
                   >
                     {CATEGORY_LABELS[ep.category]}
                   </span>
-                  {ep.isFree && (
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-green-500/20 text-green-400 border border-green-500/30">
-                      FREE
-                    </span>
-                  )}
                 </div>
                 <h3 className="font-semibold text-[#f1f5f9] group-hover:text-white truncate">
                   {ep.title}
@@ -168,15 +163,9 @@ export default function PodcastPage() {
               {/* Right side */}
               <div className="flex-shrink-0 flex items-center gap-3 text-[#64748b]">
                 <span className="text-xs font-mono hidden sm:block">{ep.duration}</span>
-                {ep.isFree ? (
-                  <div className="w-8 h-8 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                    <Play className="w-3.5 h-3.5 ml-0.5" />
-                  </div>
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-[#0f1629] border border-[#1e293b] flex items-center justify-center text-[#64748b]">
-                    <Lock className="w-3.5 h-3.5" />
-                  </div>
-                )}
+                <div className="w-8 h-8 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                  <Play className="w-3.5 h-3.5 ml-0.5" />
+                </div>
               </div>
             </Link>
           ))}

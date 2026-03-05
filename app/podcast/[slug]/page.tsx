@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ArrowLeft, ArrowRight, Lock, CheckCircle2, Building2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Building2 } from "lucide-react";
 import {
   PODCAST_EPISODES,
   CATEGORY_LABELS,
@@ -115,44 +115,17 @@ export default async function EpisodePage({
 
         {/* ── Audio player ───────────────────────────────────────────── */}
         <div className="mb-8 rounded-xl bg-[#111827] border border-[#1e293b] overflow-hidden">
-          {ep.isFree ? (
-            <div className="p-5">
-              <audio
-                controls
-                className="w-full h-10"
-                style={{ colorScheme: "dark" }}
-                preload="metadata"
-              >
-                <source src={ep.mp3Url} type="audio/mpeg" />
-                Your browser does not support the audio element.
-              </audio>
-            </div>
-          ) : (
-            <div className="relative p-5">
-              {/* Blurred placeholder audio */}
-              <div className="blur-sm pointer-events-none select-none opacity-50">
-                <div className="w-full h-10 rounded-lg bg-[#1e293b] flex items-center px-3 gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#2563eb]/30" />
-                  <div className="flex-1 h-1.5 rounded-full bg-[#1e293b]">
-                    <div className="w-1/3 h-full rounded-full bg-[#2563eb]/40" />
-                  </div>
-                  <span className="text-xs text-[#64748b] font-mono">{ep.duration}</span>
-                </div>
-              </div>
-              {/* Lock overlay */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#111827]/80 px-4 text-center">
-                <Lock className="w-6 h-6 text-[#64748b]" />
-                <p className="text-sm font-semibold text-[#f1f5f9]">This episode is for subscribers only</p>
-                <p className="text-xs text-[#64748b]">🎧 Preview: first 30 seconds free — subscribe to hear the full episode</p>
-                <Link
-                  href="/subscribe"
-                  className="px-5 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-sm font-semibold hover:opacity-90 transition-opacity"
-                >
-                  Subscribe for $9/month
-                </Link>
-              </div>
-            </div>
-          )}
+          <div className="p-5">
+            <audio
+              controls
+              className="w-full h-10"
+              style={{ colorScheme: "dark" }}
+              preload="metadata"
+            >
+              <source src={ep.mp3Url} type="audio/mpeg" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
         </div>
 
         {/* ── Companies ──────────────────────────────────────────────── */}
@@ -195,27 +168,9 @@ export default async function EpisodePage({
         {/* ── Architecture diagram placeholder ───────────────────────── */}
         <div className="mb-10 rounded-xl bg-[#111827] border border-[#1e293b] p-6">
           <h2 className="text-lg font-semibold text-[#f1f5f9] mb-3">Architecture Diagram</h2>
-          {ep.isFree ? (
-            <div className="rounded-lg bg-[#0f1629] border border-[#1e293b] h-48 flex items-center justify-center text-[#64748b] text-sm">
-              Diagram coming soon
-            </div>
-          ) : (
-            <div className="relative rounded-lg bg-[#0f1629] border border-[#1e293b] h-48 flex items-center justify-center overflow-hidden">
-              <span className="text-[#64748b] text-sm blur-sm select-none">
-                Architecture diagram
-              </span>
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#0f1629]/80">
-                <Lock className="w-5 h-5 text-[#64748b]" />
-                <p className="text-xs text-[#64748b]">Diagram available for subscribers</p>
-                <Link
-                  href="/subscribe"
-                  className="text-xs text-blue-400 hover:text-blue-300 underline transition-colors"
-                >
-                  Unlock with $9/month
-                </Link>
-              </div>
-            </div>
-          )}
+          <div className="rounded-lg bg-[#0f1629] border border-[#1e293b] h-48 flex items-center justify-center text-[#64748b] text-sm">
+            Diagram coming soon
+          </div>
         </div>
 
         {/* ── Episode navigation ─────────────────────────────────────── */}
