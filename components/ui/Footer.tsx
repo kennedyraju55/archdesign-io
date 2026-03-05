@@ -54,19 +54,20 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Subscription */}
+          {/* Podcast */}
           <div>
-            <h4 className="font-semibold text-[var(--text-primary)] mb-4 text-sm uppercase tracking-wider">Videos</h4>
+            <h4 className="font-semibold text-[var(--text-primary)] mb-4 text-sm uppercase tracking-wider">Podcast</h4>
             <ul className="space-y-2">
               {[
-                { label: "Videos Coming Soon", href: "/coming-soon" },
-                { label: "How It Works", href: "/#how-it-works" },
-                { label: "FAQ", href: "/#faq" },
+                { label: "All Episodes", href: "/podcast" },
+                { label: "Distributed Systems", href: "/podcast?cat=distributed" },
+                { label: "LLM & AI Episodes", href: "/podcast?cat=llm-ai" },
+                { label: "RSS Feed", href: "/podcast.xml" },
               ].map(({ label, href }) => (
                 <li key={label}>
-                  <Link href={href} className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                  <a href={href} className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
                     {label}
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>
@@ -76,7 +77,7 @@ export default function Footer() {
         <div className="border-t border-[var(--border)] mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-xs text-[var(--text-muted)]">© 2025 ArchDesign.io · Built by Raju Guthikonda · Microsoft Engineer</p>
           <p className="text-xs text-[var(--text-muted)]">
-            <span className="text-[var(--accent-teal)]">2 new architectures/week</span> · 30 deep-dives · 15 weeks of content
+            <span className="text-[var(--accent-teal)]">30 architectures · 30 podcast episodes</span> · Free forever
           </p>
         </div>
       </div>

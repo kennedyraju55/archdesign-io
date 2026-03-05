@@ -40,7 +40,7 @@ export default function PodcastPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center relative">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium mb-6">
             <Mic className="w-3 h-3" />
-            NEW EPISODE EVERY WEEK
+            30 EPISODES · ALL FREE
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-4">
             <span
@@ -98,9 +98,9 @@ export default function PodcastPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
           {[
             { icon: <Mic className="w-4 h-4" />, value: "30", label: "Episodes" },
-            { icon: <Clock className="w-4 h-4" />, value: "6+", label: "Hours" },
+            { icon: <Clock className="w-4 h-4" />, value: "2h+", label: "Content" },
             { icon: <Layers className="w-4 h-4" />, value: "3", label: "Categories" },
-            { icon: <Sparkles className="w-4 h-4" />, value: "Free", label: "to Start" },
+            { icon: <Sparkles className="w-4 h-4" />, value: "Free", label: "Forever" },
           ].map(({ icon, value, label }) => (
             <div key={label} className="flex flex-col items-center gap-1">
               <span className="text-blue-400">{icon}</span>

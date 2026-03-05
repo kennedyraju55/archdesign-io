@@ -6,7 +6,7 @@ import { ArrowRight, BookOpen, CheckCircle2 } from "lucide-react";
 const trustSignals = [
   { icon: CheckCircle2, label: "Free forever" },
   { icon: CheckCircle2, label: "No login required" },
-  { icon: BookOpen, label: "30 architecture deep-dives" },
+  { icon: BookOpen, label: "30 articles + 30 podcast episodes" },
 ];
 
 export default function FinalCTA() {
@@ -56,9 +56,9 @@ export default function FinalCTA() {
           className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
           style={{ color: "var(--text-secondary)" }}
         >
-          30 real-world architecture deep-dives — from Netflix CDN to GPT inference pipelines.{" "}
-          <span style={{ color: "var(--text-primary)" }}>FAANG interview Q&amp;A</span>,{" "}
-          2025 research paper breakdowns, and production tradeoffs. All free, forever.
+          30 real-world architecture deep-dives + 30 podcast episodes — from Netflix CDN to GPT inference pipelines.{" "}
+          <span style={{ color: "var(--text-primary)" }}>Read the articles. Listen on the go.</span>{" "}
+          Built by a Microsoft engineer, free for every CS student.
         </p>
 
         {/* Buttons */}
@@ -79,7 +79,7 @@ export default function FinalCTA() {
           </Link>
 
           <Link
-            href="/coming-soon"
+            href="/podcast"
             className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl font-semibold text-base border-2 transition-all hover:scale-105"
             style={{
               borderColor: "var(--accent-teal)",
@@ -95,7 +95,7 @@ export default function FinalCTA() {
                 "transparent";
             }}
           >
-            🔔 Get Notified — Videos Coming Soon
+            🎙️ Listen to the Podcast
           </Link>
         </div>
 

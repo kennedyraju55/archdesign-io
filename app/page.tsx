@@ -3,6 +3,7 @@ import Stats from "@/components/sections/Stats";
 import ArchPreview from "@/components/sections/ArchPreview";
 import AuthorSection from "@/components/sections/AuthorSection";
 import HowItWorks from "@/components/sections/HowItWorks";
+import PodcastSection from "@/components/sections/PodcastSection";
 import WhyBetter from "@/components/sections/WhyBetter";
 import Pricing from "@/components/sections/Pricing";
 import Testimonials from "@/components/sections/Testimonials";
@@ -15,8 +16,9 @@ export default function Home() {
       <Hero />
       <Stats />
       <ArchPreview />
-      <AuthorSection />
       <HowItWorks />
+      <PodcastSection />
+      <AuthorSection />
       <WhyBetter />
       <Pricing />
       <Testimonials />

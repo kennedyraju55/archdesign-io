@@ -38,11 +38,10 @@ export default function Navbar() {
           {/* CTA */}
           <div className="hidden md:flex items-center gap-3">
             <Link
-              href="/coming-soon"
-              className="px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity text-black"
-              style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}
+              href="/podcast"
+              className="px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity text-white bg-gradient-to-r from-blue-600 to-cyan-500"
             >
-              🔔 Get Notified
+              🎙️ Listen Now
             </Link>
           </div>
 
@@ -71,11 +70,11 @@ export default function Navbar() {
               How it Works
             </Link>
             <Link
-              href="/coming-soon"
+              href="/podcast"
               className="block w-full text-center px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-sm font-semibold"
               onClick={() => setOpen(false)}
             >
-              🔔 Get Notified
+              🎙️ Listen Now
             </Link>
           </div>
         </div>

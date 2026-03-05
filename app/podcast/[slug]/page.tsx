@@ -165,12 +165,16 @@ export default async function EpisodePage({
           </ul>
         </div>
 
-        {/* ── Architecture diagram placeholder ───────────────────────── */}
+        {/* ── Architecture diagram ────────────────────────────────────── */}
         <div className="mb-10 rounded-xl bg-[#111827] border border-[#1e293b] p-6">
-          <h2 className="text-lg font-semibold text-[#f1f5f9] mb-3">Architecture Diagram</h2>
-          <div className="rounded-lg bg-[#0f1629] border border-[#1e293b] h-48 flex items-center justify-center text-[#64748b] text-sm">
-            Diagram coming soon
-          </div>
+          <h2 className="text-lg font-semibold text-[#f1f5f9] mb-4">Architecture Diagram</h2>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`/podcast/diagrams/${ep.slug}.png`}
+            alt={`${ep.title} architecture diagram`}
+            className="w-full rounded-lg border border-[#1e293b]"
+            loading="lazy"
+          />
         </div>
 
         {/* ── Episode navigation ─────────────────────────────────────── */}

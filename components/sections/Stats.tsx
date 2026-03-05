@@ -1,7 +1,7 @@
 const stats = [
   { value: "30", label: "Architecture Deep-Dives", sublabel: "Real-world systems" },
   { value: "10+", label: "LLM & AI Systems", sublabel: "Latest research papers" },
-  { value: "FAANG", label: "Interview Questions", sublabel: "5 per architecture" },
+  { value: "30", label: "Podcast Episodes", sublabel: "Free to listen, always" },
   { value: "2025", label: "Papers Referenced", sublabel: "Latest research included" },
 ];
 

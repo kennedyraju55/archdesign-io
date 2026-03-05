@@ -1,4 +1,4 @@
-import { FileText, Video, Mail, Repeat } from "lucide-react";
+import { FileText, Headphones, Brain, Repeat } from "lucide-react";
 
 const steps = [
   {
@@ -9,24 +9,24 @@ const steps = [
     color: "var(--accent-teal)",
   },
   {
-    icon: Video,
+    icon: Headphones,
     number: "02",
-    title: "Video Walkthroughs — Coming Soon",
-    description: "Video walkthroughs are coming soon — free 40-minute deep-dives with live diagram annotation and Q&A-style explanations.",
+    title: "Listen to the Podcast",
+    description: "Alex & Sam break down each architecture in a conversational podcast episode — 3-8 minutes each. Perfect for commutes, walks, or coding sessions. All 30 episodes are free.",
     color: "var(--accent-blue)",
   },
   {
-    icon: Mail,
+    icon: Brain,
     number: "03",
-    title: "Get 2 Videos Every Monday",
-    description: "Every Monday morning, you'll receive an email with 2 new architecture video links (YouTube unlisted — only subscribers can access them).",
+    title: "Understand the Trade-offs",
+    description: "Each episode goes deep on why engineers at Netflix, Google, and Meta made specific design decisions. Understand the real constraints — not just the happy path.",
     color: "var(--accent-purple)",
   },
   {
     icon: Repeat,
     number: "04",
-    title: "15 Weeks of Content",
-    description: "30 architectures × 2/week = 15 weeks of structured system design education. Cancel anytime. Keep the articles forever — they're always free.",
+    title: "Ace Your System Design Interviews",
+    description: "30 architectures across distributed systems, data infrastructure, and LLM/AI. Walk into any FAANG system design interview with genuine intuition — not memorized diagrams.",
     color: "var(--accent-green)",
   },
 ];
@@ -69,32 +69,16 @@ export default function HowItWorks() {
           ))}
         </div>
 
-        {/* Weekly schedule visual */}
-        <div className="mt-16 arch-card p-6 max-w-3xl mx-auto">
-          <h3 className="text-center font-semibold text-[var(--text-primary)] mb-6">Sample Weekly Email Schedule</h3>
-          <div className="space-y-3">
-            {[
-              { week: "Week 1", archs: ["Netflix Content Delivery Architecture", "Twitter Fan-Out & Timeline"], icon: "⚡" },
-              { week: "Week 2", archs: ["Uber Geospatial Architecture", "WhatsApp Messaging at Scale"], icon: "⚡" },
-              { week: "Week 3", archs: ["Google Web Search Index", "Amazon DynamoDB Architecture"], icon: "⚡" },
-              { week: "Week 11", archs: ["GPT / Transformer Inference", "RAG Pipeline Architecture"], icon: "🤖" },
-              { week: "Week 15", archs: ["AI Safety & Guardrails", "LLM Serving Infrastructure"], icon: "🤖" },
-            ].map(({ week, archs, icon }) => (
-              <div key={week} className="flex items-center gap-4 p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border)]">
-                <div className="text-xs font-bold text-[var(--text-muted)] w-16 shrink-0">{week}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap gap-2">
-                    {archs.map((a) => (
-                      <span key={a} className="text-xs px-2 py-1 rounded bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)] truncate">{icon} {a}</span>
-                    ))}
-                  </div>
-                </div>
-                <div className="shrink-0">
-                  <Mail className="w-4 h-4 text-blue-400" />
-                </div>
-              </div>
-            ))}
-          </div>
+        {/* CTA */}
+        <div className="mt-12 text-center">
+          <a
+            href="/podcast"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold text-lg hover:opacity-90 transition-all glow-blue shadow-2xl"
+          >
+            <Headphones className="w-5 h-5" />
+            Start Listening — All 30 Free
+          </a>
+          <p className="text-xs text-[var(--text-muted)] mt-3">No account · No payment · Just good systems education</p>
         </div>
       </div>
     </section>

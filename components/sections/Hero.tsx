@@ -43,18 +43,18 @@ export default function Hero() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
             <Link
-              href="/subscribe"
+              href="/architectures"
               className="group flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold text-lg hover:opacity-90 transition-all glow-blue shadow-2xl"
             >
               Start Learning Free
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
-              href="/architectures"
+              href="/podcast"
               className="flex items-center gap-2 px-8 py-4 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] font-semibold text-lg hover:border-blue-500 hover:text-white transition-all"
             >
               <BookOpen className="w-5 h-5" />
-              Browse Free Articles
+              Listen to Podcast
             </Link>
           </div>
 
@@ -77,7 +77,7 @@ export default function Hero() {
             <div className="hidden sm:block w-px h-4 bg-[var(--border)]" />
             <div className="flex items-center gap-1.5">
               <Users className="w-4 h-4 text-green-400" />
-              <span><strong className="text-green-400">150+</strong> FAANG interview questions</span>
+              <span><strong className="text-green-400">Free</strong> podcast · 30 episodes</span>
             </div>
           </div>
         </div>
