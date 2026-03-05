@@ -62,7 +62,7 @@ export default function Footer() {
                 { label: "All Episodes", href: "/podcast" },
                 { label: "Distributed Systems", href: "/podcast?cat=distributed" },
                 { label: "LLM & AI Episodes", href: "/podcast?cat=llm-ai" },
-                { label: "RSS Feed", href: "/podcast.xml" },
+                { label: "How It Works", href: "/#how-it-works" },
               ].map(({ label, href }) => (
                 <li key={label}>
                   <a href={href} className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">

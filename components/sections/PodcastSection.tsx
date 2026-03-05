@@ -72,10 +72,10 @@ export default function PodcastSection() {
             <ArrowRight className="w-4 h-4" />
           </Link>
           <a
-            href="/podcast.xml"
+            href="/podcast"
             className="inline-flex items-center gap-2 px-6 py-4 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] font-medium hover:border-blue-500/50 hover:text-white transition-all"
           >
-            RSS Feed
+            Browse all 30 episodes
           </a>
         </div>
         <p className="text-center text-xs text-[var(--text-muted)] mt-4">No login · No credit card · Always free</p>

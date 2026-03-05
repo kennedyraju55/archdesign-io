@@ -59,14 +59,8 @@ export default function PodcastPage() {
             Netflix, Kafka, Kubernetes, GPT, and more.
           </p>
 
-          {/* Subscribe buttons */}
+          {/* Listen buttons - coming soon: Spotify & Apple */}
           <div className="flex flex-wrap gap-3 justify-center">
-            <a
-              href="/podcast.xml"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#1e293b] text-[#94a3b8] text-sm font-medium hover:text-white hover:bg-[#1a2235] transition-colors border border-[#1e293b]"
-            >
-              RSS Feed
-            </a>
           </div>
         </div>
       </section>
