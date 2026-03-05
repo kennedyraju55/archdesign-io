@@ -17,16 +17,24 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://archdesign.io"),
   title: "ArchDesign.io — Master System Design with Real-World Architectures",
   description:
     "30 high-scalability system architecture deep-dives — from Netflix CDN to GPT inference pipelines. Free system design deep-dives for CS students.",
   keywords:
     "system design, architecture, distributed systems, LLM, RAG, Kafka, Netflix, interview prep, CS students",
+  robots: { index: true, follow: true },
   openGraph: {
     title: "ArchDesign.io — Master System Design",
     description: "30 real-world architecture deep-dives for CS students. Free forever · 30 architectures · Built by a Microsoft engineer.",
     type: "website",
     url: "https://archdesign.io",
+    siteName: "ArchDesign.io",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ArchDesign.io — Master System Design",
+    description: "30 real-world architecture deep-dives + 30 podcast episodes. Free forever for CS students.",
   },
 };
 

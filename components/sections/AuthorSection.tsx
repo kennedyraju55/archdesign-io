@@ -134,7 +134,7 @@ export default function AuthorSection() {
             { emoji: "🧠", title: "Research-first", desc: "Every architecture cites the original paper — Dynamo, MapReduce, FlashAttention, LoRA, PagedAttention." },
             { emoji: "⚡", title: "Production-grade depth", desc: "Failure modes, operational gotchas, and real tradeoffs from actually running these systems." },
             { emoji: "🤖", title: "2025 LLM papers", desc: "PRESERVE, Mooncake, Preble, Oaken — cutting-edge inference architectures ByteByteGo hasn't covered." },
-            { emoji: "🎯", title: "Interview-ready framing", desc: "The exact questions asked at Google, Meta, Amazon, and Microsoft system design rounds." },
+            { emoji: "🎯", title: "Interview-ready framing", desc: "Common patterns from real system design rounds at Google, Meta, Amazon, and Microsoft — 5 questions per architecture." },
           ].map(({ emoji, title, desc }) => (
             <div key={title} className="arch-card p-5">
               <span className="text-2xl mb-3 block">{emoji}</span>

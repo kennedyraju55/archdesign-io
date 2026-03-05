@@ -27,22 +27,22 @@ const rows: ComparisonRow[] = [
     archDesign: { value: "2025 papers", positive: true },
   },
   {
-    feature: "FAANG Interview Q&A",
+    feature: "Interview Questions",
     bytebyteGo: { value: "No", positive: false },
     designGurus: { value: "Basic", positive: false },
-    archDesign: { value: "Per architecture", positive: true },
+    archDesign: { value: "5 per article", positive: true },
   },
   {
-    feature: "Built by practitioner",
+    feature: "Built by practitioners",
     bytebyteGo: { value: "No", positive: false },
     designGurus: { value: "No", positive: false },
-    archDesign: { value: "Microsoft Engineer", positive: true },
+    archDesign: { value: "Microsoft + Lowe's", positive: true },
   },
   {
-    feature: "Free articles",
+    feature: "Free articles + podcast",
     bytebyteGo: { value: "No", positive: false },
     designGurus: { value: "No", positive: false },
-    archDesign: { value: "All 30 free", positive: true },
+    archDesign: { value: "30 + 30 free", positive: true },
   },
 ];
 

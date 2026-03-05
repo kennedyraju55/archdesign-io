@@ -27,7 +27,7 @@ const faqs: FAQItem[] = [
   {
     question: "How is this different from ByteByteGo?",
     answer:
-      "ByteByteGo covers solid fundamentals but the content is largely based on their books — outdated (no 2024–2025 research) and no FAANG interview Q&A. ArchDesign.io covers 10 LLM architectures competitors have never touched (vLLM, RAG pipelines, multi-agent systems), grounds every breakdown in the latest papers (PRESERVE, Mooncake, Preble, Oaken, PyramidInfer), and attaches real FAANG interview questions to every architecture. It's written by a practicing Microsoft Software Engineer — not a content creator recycling textbook diagrams. And everything is free.",
+      "ByteByteGo covers solid fundamentals but the content is largely based on their books — outdated (no 2024–2025 research) and no interview questions per architecture. ArchDesign.io covers 10 LLM architectures competitors have never touched (vLLM, RAG pipelines, multi-agent systems), grounds every breakdown in the latest papers (PRESERVE, Mooncake, Preble, Oaken, PyramidInfer), and attaches 5 real interview questions to every architecture. It's written by practicing engineers at Microsoft and Lowe's — not content creators recycling textbook diagrams. And everything is free.",
   },
   {
     question: "Is all the content really free?",

@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ArrowLeft, ArrowRight, CheckCircle2, Building2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Building2, BookOpen } from "lucide-react";
 import {
   PODCAST_EPISODES,
   CATEGORY_LABELS,
-  CATEGORY_COLORS,
   type PodcastCategory,
 } from "@/data/podcast";
+import { architectures } from "@/data/architectures";
 
 // ── Static params ─────────────────────────────────────────────────────────────
 
@@ -45,20 +45,47 @@ const BADGE_STYLES: Record<PodcastCategory, string> = {
   "llm-ai": "bg-teal-500/20 text-teal-400 border border-teal-500/30",
 };
 
-// ── Derive 3 key takeaways from the description ───────────────────────────────
+const ICON_COLORS: Record<PodcastCategory, string> = {
+  distributed: "text-blue-400",
+  "data-infrastructure": "text-purple-400",
+  "llm-ai": "text-teal-400",
+};
+
+// ── Derive 3 key takeaways from the episode description ───────────────────────
 
 function deriveKeyTakeaways(ep: (typeof PODCAST_EPISODES)[number]): string[] {
+  // Extract meaningful sentences from the description
+  const sentences = ep.description
+    .split(/[.!?]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 20);
+
+  const company = ep.companies[0];
   const tagLabels = ep.tags.slice(0, 3).map((t) =>
     t
       .split("-")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ")
   );
-  return [
-    `Why ${ep.companies[0]} built this architecture and the scale challenges they faced.`,
-    `How ${tagLabels[0]} and ${tagLabels[1] ?? tagLabels[0]} work together under the hood.`,
-    `Key trade-offs and lessons you can apply to your own system design interviews.`,
-  ];
+
+  // Build takeaways that mix description content with tags
+  const takeaways: string[] = [];
+
+  if (sentences.length >= 2) {
+    takeaways.push(sentences[1].endsWith(".") ? sentences[1] : sentences[1] + ".");
+  } else {
+    takeaways.push(`Why ${company} built this architecture and the scale challenges they faced.`);
+  }
+
+  takeaways.push(
+    `Core concepts covered: ${tagLabels.join(", ")}${tagLabels.length < ep.tags.length ? `, and ${ep.tags.length - tagLabels.length} more` : ""}.`
+  );
+
+  takeaways.push(
+    `Key trade-offs and design decisions you can apply to your own system design interviews.`
+  );
+
+  return takeaways;
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -76,7 +103,8 @@ export default async function EpisodePage({
   const prevEp = epIndex > 0 ? PODCAST_EPISODES[epIndex - 1] : null;
   const nextEp = epIndex < PODCAST_EPISODES.length - 1 ? PODCAST_EPISODES[epIndex + 1] : null;
   const takeaways = deriveKeyTakeaways(ep);
-  const categoryColor = CATEGORY_COLORS[ep.category];
+  const iconColor = ICON_COLORS[ep.category];
+  const matchingArch = architectures.find((a) => a.slug === ep.slug);
 
   return (
     <div className="min-h-screen bg-[#0a0f1e] pt-16">
@@ -158,12 +186,33 @@ export default async function EpisodePage({
           <ul className="space-y-2">
             {takeaways.map((t) => (
               <li key={t} className="flex items-start gap-2 text-sm text-[#94a3b8]">
-                <CheckCircle2 className={`w-4 h-4 mt-0.5 flex-shrink-0 text-${categoryColor}-400`} />
+                <CheckCircle2 className={`w-4 h-4 mt-0.5 flex-shrink-0 ${iconColor}`} />
                 {t}
               </li>
             ))}
           </ul>
         </div>
+
+        {/* ── Read the full article ──────────────────────────────────── */}
+        {matchingArch && (
+          <Link
+            href={`/architecture/${matchingArch.slug}`}
+            className="mb-8 flex items-center gap-4 p-5 rounded-xl bg-[#111827] border border-[#1e293b] hover:border-blue-500/30 hover:bg-[#1a2235] transition-all group"
+          >
+            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center">
+              <BookOpen className="w-5 h-5 text-blue-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-[#f1f5f9] group-hover:text-white transition-colors">
+                Read the full article
+              </p>
+              <p className="text-xs text-[#64748b] mt-0.5 truncate">
+                {matchingArch.title} — deep dive with diagrams, tradeoffs &amp; interview questions
+              </p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-[#64748b] group-hover:text-blue-400 transition-colors flex-shrink-0" />
+          </Link>
+        )}
 
         {/* ── Architecture diagram ────────────────────────────────────── */}
         <div className="mb-10 rounded-xl bg-[#111827] border border-[#1e293b] p-6">
