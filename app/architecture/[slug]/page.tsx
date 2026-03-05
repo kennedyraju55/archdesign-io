@@ -478,40 +478,32 @@ export default async function ArchitectureDetailPage({
           </section>
         )}
 
-        {/* ── Video Coming Soon ─────────────────────────────────────── */}
+        {/* ── Podcast Episode ───────────────────────────────────────── */}
         <section>
           <h2 className="text-xl font-bold text-[var(--text-primary)] mb-5 flex items-center gap-2">
-            <Play className="w-5 h-5 text-amber-400" />
-            Video Walkthrough
+            <Play className="w-5 h-5 text-blue-400" />
+            Listen to the Podcast Episode
           </h2>
-          <div className="relative rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-orange-500/5 p-8 text-center overflow-hidden">
+          <div className="relative rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 p-8 text-center overflow-hidden">
             <div className="absolute inset-0 grid-bg opacity-10 pointer-events-none" />
             <div className="relative">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-widest mb-5">
-                🎬 Coming Soon
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-bold uppercase tracking-widest mb-5">
+                🎙️ Free Podcast
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-[var(--text-primary)] mb-3">
-                40-Minute Video Deep-Dive
+                Alex &amp; Sam break it down
               </h3>
-              <p className="text-[var(--text-secondary)] text-sm leading-relaxed max-w-md mx-auto mb-5">
-                A full walkthrough of this architecture with live diagram annotation, capacity estimation worked examples, and FAANG interview Q&A — explained by a practising Microsoft engineer.
+              <p className="text-[var(--text-secondary)] text-sm leading-relaxed max-w-md mx-auto mb-6">
+                Listen to a conversational deep-dive on this architecture — real trade-offs, production context, and student-friendly explanations. Free, no login required.
               </p>
-              <ul className="flex flex-col sm:flex-row gap-3 justify-center text-sm text-[var(--text-secondary)] mb-6">
-                {["Live diagram annotation", "Capacity estimation walkthrough", "Production war stories", "FAANG Q&A with model answers"].map(f => (
-                  <li key={f} className="flex items-center gap-1.5 justify-center">
-                    <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />{f}
-                  </li>
-                ))}
-              </ul>
               <Link
-                href="/coming-soon"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-black hover:opacity-90 transition shadow-lg"
-                style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)', boxShadow: '0 8px 24px rgba(245,158,11,0.25)' }}
+                href={`/podcast/${arch.slug}`}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-white hover:opacity-90 transition shadow-lg shadow-blue-600/30 bg-gradient-to-r from-blue-600 to-cyan-500"
               >
-                <Zap className="w-4 h-4" />
-                Get Notified When Live
+                <Play className="w-4 h-4" />
+                Listen to Episode
               </Link>
-              <p className="text-xs text-[var(--text-muted)] mt-2">Free to watch  No account required  Dropping soon</p>
+              <p className="text-xs text-[var(--text-muted)] mt-3">Free · No account required · Listen in browser</p>
             </div>
           </div>
         </section>
@@ -544,23 +536,23 @@ export default async function ArchitectureDetailPage({
           <div className="absolute inset-0 grid-bg opacity-20 pointer-events-none" />
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-64 h-64 bg-blue-600/10 rounded-full blur-[60px] pointer-events-none" />
           <div className="relative">
-            <div className="inline-flex items-center gap-2 badge badge-purple mb-5">
-               30 Video Deep-Dives  Coming Soon
+            <div className="inline-flex items-center gap-2 badge badge-blue mb-5">
+              🎙️ Podcast · All Free
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-3">
-              Master every architecture with{" "}
-              <span className="gradient-text-warm">video walkthroughs</span>
+              Listen to more architecture{" "}
+              <span className="gradient-text">deep-dives</span>
             </h2>
             <p className="text-[var(--text-secondary)] mb-7 max-w-xl mx-auto">
-              One video per architecture. FAANG interview prep, live diagram walkthroughs, and production tradeoffs  explained by a Microsoft engineer.
+              30 free podcast episodes — Alex &amp; Sam break down every architecture in this library. Listen in your browser, no account needed.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
-                href="/coming-soon"
+                href="/podcast"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-blue-600/30"
               >
                 <Play className="w-4 h-4" />
-                Get Notified
+                Browse All Episodes
               </Link>
               <Link
                 href="/architectures"
@@ -569,7 +561,7 @@ export default async function ArchitectureDetailPage({
                 Browse all 30 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-            <p className="mt-4 text-xs text-[var(--text-muted)]">All architecture articles are free  No account needed</p>
+            <p className="mt-4 text-xs text-[var(--text-muted)]">All architecture articles are free · No account needed</p>
           </div>
         </section>
 

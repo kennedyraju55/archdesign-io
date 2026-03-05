@@ -62,28 +62,6 @@ export default function PodcastPage() {
           {/* Subscribe buttons */}
           <div className="flex flex-wrap gap-3 justify-center">
             <a
-              href="https://open.spotify.com/show/archdesign"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#1DB954] text-black text-sm font-semibold hover:opacity-90 transition-opacity"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
-              </svg>
-              Listen on Spotify
-            </a>
-            <a
-              href="https://podcasts.apple.com/podcast/archdesign"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#872ec4] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.016 0C5.383 0 .016 5.367.016 12c0 6.633 5.367 12 11.984 12C18.633 24 24 18.633 24 12c0-6.633-5.367-12-11.984-12zm-.016 4.8c2.4 0 4.367 1.967 4.367 4.367 0 2.4-1.967 4.367-4.367 4.367-2.4 0-4.367-1.967-4.367-4.367C7.633 6.767 9.6 4.8 12 4.8zm6.717 14.4H5.283A9.574 9.574 0 012.4 12a9.6 9.6 0 0119.2 0 9.574 9.574 0 01-2.883 7.2z" />
-              </svg>
-              Apple Podcasts
-            </a>
-            <a
               href="/podcast.xml"
               className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#1e293b] text-[#94a3b8] text-sm font-medium hover:text-white hover:bg-[#1a2235] transition-colors border border-[#1e293b]"
             >

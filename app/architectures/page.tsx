@@ -156,21 +156,21 @@ export default function ArchitecturesPage() {
       {/* ── Bottom CTA ───────────────────────────────────────────── */}
       <section className="border-t border-[var(--border)] bg-[var(--bg-secondary)]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 text-center">
-          <div className="inline-flex items-center gap-2 badge badge-purple mb-5">🎬 Video Series</div>
+          <div className="inline-flex items-center gap-2 badge badge-blue mb-5">🎙️ Podcast</div>
           <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] mb-3">
-            Every architecture includes a{" "}
-            <span className="gradient-text-warm">video walkthrough</span>
+            Every architecture has a{" "}
+            <span className="gradient-text">podcast episode</span>
           </h2>
           <p className="text-[var(--text-secondary)] mb-7 max-w-xl mx-auto">
-            20–40 minute deep-dives with live diagram annotation, FAANG interview Q&amp;A, and capacity estimation. New video every week.
+            Alex &amp; Sam cover each architecture in a free 3–8 minute episode. Listen while you commute, code, or cook — no account required.
           </p>
           <a
-            href="/coming-soon"
+            href="/podcast"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-blue-600/30"
           >
-            🔔 Videos Coming Soon
+            🎙️ Browse All Episodes
           </a>
-          <p className="mt-3 text-xs text-[var(--text-muted)]">Free forever · Get notified when videos launch</p>
+          <p className="mt-3 text-xs text-[var(--text-muted)]">Free forever · No account needed</p>
         </div>
       </section>
     </div>
